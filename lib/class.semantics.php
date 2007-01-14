@@ -11,7 +11,7 @@ class Semantics
 	var $unknown;
 	var $message;
 	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
-	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational)';
+	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress)';
 
 	function Semantics($command)
 	{
@@ -179,7 +179,7 @@ class Semantics
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value)', 'call' => 'setMatchType_', 'name' => 'match-type'),
-						array('occurrences' => '?', 'regex' => ':(all|localpart|domain)', 'name' => 'address-part'),
+						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
 						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
 							'add' => array(
 								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
@@ -224,7 +224,7 @@ class Semantics
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value)', 'call' => 'setMatchType_', 'name' => 'match-type'),
-						array('occurrences' => '?', 'regex' => ':(all|localpart|domain)', 'name' => 'address-part'),
+						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
 						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
 							'add' => array(
 								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
@@ -358,6 +358,20 @@ class Semantics
 	function setComparator_($text)
 	{
 		$this->comparator_ = $text;
+		return true;
+	}
+
+	function checkAddrPart_($text)
+	{
+		if ($text == ':user' || $text == ':detail')
+		{
+			global $requires_;
+			if (!in_array('"subaddress"', $requires_))
+			{
+				$this->message = 'missing require for tag '. $text;
+				return false;
+			}
+		}
 		return true;
 	}
 

@@ -1,12 +1,13 @@
 require ["envelope", "relational", "comparator-i;ascii-numeric"];
+require "subaddress";
 
 if header :comparator "i;ascii-numeric" :count "lt" "a" ["3"]
 	{ keep; }
 elsif header :value "gt" ["a", "b"] ["3"]
 	{ keep; }
-elsif address :comparator "i;ascii-numeric" :count "eq" ["to"] "5"
+elsif address :comparator "i;ascii-numeric" :count "eq" :detail ["to"] "5"
 	{ keep; }
-elsif address :value "ne" ["to", "from"] "5"
+elsif address :user :value "ne" ["to", "from"] "5"
 	{ keep; }
 elsif envelope :count "ge" :comparator "i;ascii-numeric" ["from"] "3"
 	{ keep; }
