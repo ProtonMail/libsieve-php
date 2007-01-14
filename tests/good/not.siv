@@ -1,0 +1,3 @@
+if not not true {
+	stop;
+}

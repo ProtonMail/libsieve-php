@@ -1,0 +1,15 @@
+require ["envelope"];
+require ["envelope"];
+
+if envelope :all :is "To" ["a@b.c"]
+  { keep; }
+elsif envelope :contains :localpart "From" ["me" ,"you"]
+  { keep; }
+elsif envelope :contains :localpart ["To","From"] ["me" ,"you"]
+  { keep; }
+elsif envelope :domain :matches :comparator "i;ascii-casemap" "FROM" "a@b.c"
+  { keep; }
+elsif envelope :comparator "i;octet" :domain ["TO"] "a"
+  { keep; }
+elsif envelope :is :comparator "i;octet" ["FROM" , "tO"] "a@b.c"
+  { keep; }

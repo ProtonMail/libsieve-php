@@ -1,0 +1,605 @@
+Network Working Group                                       T. Showalter
+Internet Draft: Sieve: Vacation Extension
+Document: draft-showalter-sieve-vacation-06.txt          26 October 2004
+Expires April 25, 2004
+
+
+
+                       Sieve: Vacation Extension
+
+
+
+Intellectual Property Rights Statement
+
+
+     By submitting this Internet-Draft, I certify that any applicable
+     patent or other IPR claims of which I am aware have been disclosed,
+     or will be disclosed, and any of which I become aware will be
+     disclosed, in accordance with RFC 3668.
+
+
+Status of this memo
+
+
+     "Internet-Drafts are working documents of the Internet Engineering
+     Task Force (IETF), its areas, and its working groups.  Note that
+     other groups may also distribute working documents as Internet-
+     Drafts.
+
+
+     Internet-Drafts are draft documents valid for a maximum of six
+     months and may be updated, replaced, or obsoleted by other
+     documents at any time.  It is inappropriate to use Internet-Drafts
+     as reference material or to cite them other than as "work in
+     progress."
+
+
+     The list of current Internet-Drafts can be accessed at
+     http://www.ietf.org/1id-abstracts.html
+
+
+     The list of Internet-Draft Shadow Directories can be accessed at
+     http://www.ietf.org/shadow.html"
+
+
+Copyright
+
+
+     Copyright (C) The Internet Society 2004.  All Rights Reserved.
+
+
+Abstract
+
+
+     This document describes an extension to the Sieve mail filtering
+     language for an autoresponder similar to that of the Unix
+     "vacation" command for replying to messages with certain safety
+     features to prevent problems.
+
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 1]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+1. Introduction
+
+
+     This is an extension to the Sieve language defined by [SIEVE] for
+     notification that messages will not be immediately answered.
+
+
+     Conventions for notations are as in [SIEVE] section 1.1.
+
+
+     The key words "MUST", "MUST NOT", "SHOULD", "SHOULD NOT", "CAN",
+     and "MAY" in this document are to be interpreted as defined in
+     [KEYWORDS].
+
+
+2. Capability Identifier
+
+
+     Sieve implementations that implement vacation have an identifier of
+     "vacation" for use with the capability mechanism.
+
+
+3. Vacation Action
+
+
+     Syntax:   vacation [":days" number] [":addresses" string-list]
+               [":subject" string] [":mime"] <reason: string>
+
+
+     The "vacation" action implements a vacation autoresponder similar
+     to the vacation command  available under many versions of Unix.
+     Its purpose is to provide correspondents with notification that the
+     user is away for an extended period of time and that they should
+     not expect quick responses.
+
+
+     "Vacation" is used to respond to a message with another message.
+     Vacation's messages are always addressed to the Return-Path address
+     (that is, the envelope from address) of the message being responded
+     to.
+
+
+3.1. Days Parameter
+
+
+     The ":days" argument is used to specify the period in which
+     addresses are kept and are not responded to, and is always
+     specified in days.  The minimum value used for this parameter is
+     normally 1.  Sites MAY define a different minimum value.  Sites MAY
+     also define a maximum days value, which MUST be greater than 7, and
+     SHOULD be greater than 30.
+
+
+     If ":days" is omitted, the default value is either 7 or the minimum
+     value (as defined above), whichever is greater.
+
+
+     If the parameter given to ":days" is less than the minimum value,
+     then the minimum value is used instead.
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 2]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+     If ":days" exceeds the site-defined maximum, the site-defined
+     maximum is used instead.
+
+
+3.2. Previous Response Tracking
+
+
+     "Vacation" keeps track of all of the responses it has sent to each
+     address in some period (as specified by the :days optional
+     argument).  If vacation has not previously sent the response to
+     this address within that time period, it sends the "reason"
+     argument to the SMTP MAIL FROM address of the message that is being
+     responded to.  (The SMTP MAIL FROM address should be available in
+     the Return-path: header field if sieve processing occurs after
+     final delivery.)
+
+
+     Vacation responses are not just per address, but are per address
+     per set of arguments to the vacation command.  For instance, If
+     coyote@desert.example.org sends mail to
+     roadrunner@acme.example.com, once with the subject "Cyrus bug" and
+     once with the subject "come over for dinner", and
+     roadrunner@acme.example.com has the script below,
+     coyote@desert.example.org would receive two responses, once with
+     the first message, once with the second.
+
+
+     Example:  require "vacation";
+               if subject :contains "cyrus" {
+                         vacation "I'm out -- send mail to cyrus-bugs";
+               } else {
+                         vacation "I'm out -- call me at 304 555 1212";
+               }
+
+
+     In the above example, coyote@desert.example.org gets the second
+     message despite having gotten the first one because separate vaca-
+     tion responses have been triggered.  This behavior is REQUIRED.
+
+
+     The "per set of arguments" described above is intended to ensure
+     that a respondee gets all of the various possible responses, not
+     merely the first one.  So, if the :subject or :mime parameters
+     would result in a different message, a different message MUST be
+     sent by the implementation.
+
+
+     If a script is changed, implementations MAY reset the records of
+     who has been responded to and when they have been responded to.
+     Alternatively, implementations can store records of who has
+     received which message, perhaps by storing a hash of the message
+     and the recipient.
+
+
+     Implementations are free to limit the number of remembered
+     responses, provided the limit is no less than 1000.
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 3]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+     Implementations SHOULD make the limit no less than 1000 per vaca-
+     tion command if using the hash algorithm described above.  When
+     limiting the number of tracked responses, implementations SHOULD
+     discard the oldest ones first.
+
+
+3.4. MIME Parameter
+
+
+     The ":mime" parameter, if supplied, specifies that the reason
+     string is, in fact, a MIME part, including MIME headers (see
+     section 2.4.2.4 of [SIEVE]).
+
+
+     If the optional :mime parameter is not supplied, the reason string
+     is considered to be a UTF-8 string.
+
+
+3.6. Address Parameter and Limiting Replies to Personal Messages
+
+
+     "Vacation" MUST NOT respond to a message unless the user's email
+     address is in the "To", "Cc", "Bcc", "Resent-To", "Resent-Cc", or
+     "Resent-Bcc" line of the original message.  Implementations are
+     assumed to know the user's email address, but users may have
+     additional addresses beyond the control of the local mail system.
+
+
+     Users can supply additional mail addresses that are theirs with the
+     ":addresses" argument, which takes a string-list listing additional
+     addresses that a user might have.  These addresses are considered
+     in addition to the addresses that the implementation knows.
+
+
+3.7. Restricting Replies to Automated Processes and Mailing Lists
+
+
+     Implementations MUST have a list of addresses that "vacation" MUST
+     NOT send mail to.  However, the contents of this list are
+     implementation defined.  The purpose of this list is to stop mail
+     from going to addresses used by system daemons that would not care
+     if the user is actually reading her mail.
+
+
+     Implementations are encouraged, however, to include well-known
+     addresses like "MAILER-DAEMON", "LISTSERV", "majordomo", and other
+     addresses typically used only by automated systems.  Additionally,
+     addresses ending in "-request" or beginning in "owner-", i.e.,
+     reserved for mailing list software, are also suggested.
+
+
+     Implementors may take guidance from [MAILBOXNAMES], but should be
+     careful.  Some addresses, like "POSTMASTER", are generally actually
+     managed by people, and people do care if the user is going to be
+     unavailable.
+
+
+     Implementations SHOULD NOT not to respond to any message with a
+     header that begins with "List-".
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 4]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+     Implementations SHOULD NOT respond to any message that has an
+     "Auto-submitted" header field with a value other than "no".  This
+     header field is described in [AUTO].
+
+
+3.8. Interaction with Other Sieve Actions
+
+
+     Vacation does not affect the implicit keep.
+
+
+     Vacation can only be executed once per script.  If vacation is used
+     with another vacation, the script fails.
+
+
+     Implementations MUST NOT consider vacation used with discard, keep,
+     fileinto, or redirect an error.
+
+
+3.9. Examples
+
+
+     Here is a simple use of vacation.
+
+
+     Example:
+               require "vacation";
+               vacation :days 23 :addresses ["tjs@example.edu",
+                          "ts4z@landru.example.edu"]
+                  "I'm away until October 19.
+                   If it's an emergency, call 911, I guess." ;
+
+
+     By mingling vacation with other rules, users can do something more
+     selective.
+
+
+     Example:  require "vacation";
+               if header :contains "from" "boss@example.edu" {
+                         redirect "pleeb@isp.example.org";
+               } else {
+                         vacation "Sorry, I'm away, I'll read your
+                            message when I get around to it.";
+               }
+
+
+4. Response Message Generation
+
+
+     This section details the requirements for the generated response
+     message.
+
+
+     It is worth noting that the input message and arguments may be in
+     UTF-8, and that implementations MUST deal with UTF-8 input,
+     although implementations MAY transcode to other character sets as
+     regional taste dictates.
+
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 5]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+4.1. SMTP MAIL FROM address
+
+
+     The SMTP MAIL FROM address of the message envelope SHOULD be set to
+     <>.  NOTIFY=NEVER SHOULD also be set in the RCPT TO line during the
+     SMTP transaction if possible.
+
+
+4.2. Subject Parameter
+
+
+     Users can specify the subject of the reply with the ":subject"
+     parameter.  If the :subject parameter is not supplied, then the
+     subject is generated as follows: The subject is set to the
+     characters "Re: " followed by the original subject with all leading
+     occurrence of the characters "Re: " stripped off.
+
+
+4.3. In-Reply-To and References
+
+
+     Replies MUST have the In-Reply-To field set to the Message-ID of
+     the original message, and the References field must be updated with
+     the Message-ID of the original message.
+
+
+     If the original message lacks a Message-ID, an In-Reply-To need not
+     be generated, and References need not bne changed.
+
+
+4.4. From
+
+
+     The From field SHOULD be set to the address of the owner of the
+     Sieve script.
+
+
+4.5. To
+
+
+     The To field SHOULD be set to the address of the recipient of the
+     response.
+
+
+4.7 Auto-submitted
+
+
+     An Auto-Submitted field with a value of "auto-replied" SHOULD be
+     included in the message header of any vacation message sent.
+
+
+4.7. Message Body
+
+
+     The body of the message is taken from the reason string in the
+     vacation command.
+
+
+5. Relationship to Recommendations for Automatic Responses to Electronic
+Mail
+
+
+     The vacation extension implements a "Personal Responder" in the
+     terminology defined in [AUTO]. Care has been taken in this
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 6]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+     specification to comply with the recommendations [AUTO] makes in
+     regards to how personal responders should behave.
+
+
+6. Security Considerations
+
+
+     It is critical that implementations correctly implement the
+     limitations described above.  Replies MUST NOT be sent out in
+     response to messages not sent directly to the user, and replies
+     MUST NOT be sent out more often than the :days argument states.
+
+
+     Security issues associated with mail auto-responders are fully
+     discussed in the security consideration section of [AUTO].
+
+
+7. IANA Considerations
+
+
+     The following template specifies the IANA registration of the
+     vacation Sieve extension specified in this document:
+
+
+     To: iana@iana.org
+     Subject: Registration of new Sieve extension
+
+
+     Capability name: vacation
+     Capability keyword: vacation
+     Capability arguments: N/A
+     Standards Track/IESG-approved experimental RFC number: this RFC
+     Person and email address to contact for further information:
+         Tim Showalter
+         E-Mail: tjs@psaux.com
+
+
+     This information should be added to the list of sieve extensions
+     given on http://www.iana.org/assignments/sieve-extensions.
+
+
+8. Acknowledgements
+
+
+     This extension is obviously inspired by Eric Allman's vacation
+     program under Unix.  The author owes a great deal to Carnegie
+     Mellon University, Cyrus Daboo, Ned Freed, Lawrence Greenfield, and
+     many others whose names have been lost during the inexcusably long
+     gestation period of this document.
+
+
+9. Author's Address
+
+
+     Tim Showalter
+
+
+     E-Mail: tjs@psaux.com
+
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 7]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+Appendix A. References
+
+
+Appendix A.1. Normative References"
+
+
+     [AUTO] Moore, K., "Recommendations for Automatic Responses to
+     Electronic Mail", Internet-Draft, draft-moore-auto-email-
+     response-05.txt.
+
+
+     [KEYWORDS] Bradner, S., "Key words for use in RFCs to Indicate
+     Requirement Levels", RFC 2119, Harvard University, March 1997.
+
+
+     [MIME] Freed, N., and N. Borenstein, "Multipurpose Internet Mail
+     Extensions (MIME) Part One: Format of Internet Message Bodies", RFC
+     2045, Innosoft and First Virtual, November 1996.
+
+
+     [SIEVE] Showalter, T.,  "Sieve: A Mail Filtering Language",
+     Mirapoint, Inc., RFC 3028, January, 2001.
+
+
+Appendix A.2. Informative References
+
+
+     [MAILBOXNAMES] Crocker, D. "Mailbox Names for Common Services,
+     Roles, and Functions", RFC 2142, Internet Mail Consortium, May,
+     1997.
+
+
+Appendix B. Intellectual Property Rights Statement
+
+
+     The IETF takes no position regarding the validity or scope of any
+     intellectual property or other rights that might be claimed to
+     pertain to the implementation or use of the technology described in
+     this document or the extent to which any license under such rights
+     might or might not be available; neither does it represent that it
+     has made any effort to identify any such rights.  Information on
+     the IETF's procedures with respect to rights in standards-track and
+     standards-related documentation can be found in BCP-11.  Copies of
+     claims of rights made available for publication and any assurances
+     of licenses to be made available, or the result of an attempt made
+     to obtain a general license or permission for the use of such
+     proprietary rights by implementors or users of this specification
+     can be obtained from the IETF Secretariat.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 8]
+Internet DRAFT          Sieve: Vacation Extension        26 October 2004
+
+
+
+Appendix C. Full Copyright Statement
+
+
+     Copyright (C) The Internet Society 2004.  This document is subject
+     to the rights, licenses and restrictions contained in BCP 78, and
+     except as set forth therein, the authors retain all their rights.
+
+
+     This document and the information contained herein are provided on
+     an "AS IS" basis and THE CONTRIBUTOR, THE ORGANIZATION HE/SHE
+     REPRESENTS OR IS SPONSORED BY (IF ANY), THE INTERNET SOCIETY AND
+     THE INTERNET ENGINEERING TASK FORCE DISCLAIM ALL WARRANTIES,
+     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT
+     THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR
+     ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+     PARTICULAR PURPOSE.
+
+
+     (See RFC 3667 sections 5.4 and 5.5.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Showalter                Expires April 25, 2004                 [Page 9] 

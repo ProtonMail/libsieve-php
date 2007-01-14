@@ -1,0 +1,12 @@
+if header :is "To" ["a@b.c"]
+  { keep; }
+elsif header :contains "From" ["me" ,"you"]
+  { keep; }
+elsif header :contains ["To","From"] ["me" ,"you"]
+  { keep; }
+elsif header :matches :comparator "i;ascii-casemap" "FROM" "a@b.c"
+  { keep; }
+elsif header :comparator "i;octet" :is ["TO"] "a"
+  { keep; }
+elsif header :contains :comparator "i;octet" ["FROM" , "tO"] "a@b.c"
+  { keep; }

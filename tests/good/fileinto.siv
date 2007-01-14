@@ -1,0 +1,4 @@
+require ["fileinto","fileinto"];
+fileinto "INBOX.foo";
+fileinto "INBOX.bar";
+

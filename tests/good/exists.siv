@@ -1,0 +1,4 @@
+if exists ["X-Foo", "X-Bar"]
+  {
+    stop;
+  }

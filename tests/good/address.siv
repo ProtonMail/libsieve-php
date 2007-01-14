@@ -1,0 +1,14 @@
+require ["comparator-i;ascii-numeric", "comparator-i;octet"];
+
+if address :all :is "To" ["a@b.c"]
+  { keep; }
+elsif address :contains :localpart "From" ["me" ,"you"]
+  { keep; }
+elsif address :contains :localpart ["To","From"] ["me" ,"you"]
+  { keep; }
+elsif address :domain :matches :comparator "i;ascii-casemap" "CC" "a@b.c"
+  { keep; }
+elsif address :comparator "i;octet" :domain ["CC"] "a"
+  { keep; }
+elsif address :is :comparator "i;ascii-numeric" ["CC" , "From"] "a@b.c"
+  { keep; }

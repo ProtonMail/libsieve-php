@@ -1,0 +1,9 @@
+if size :over 10M {
+	keep;
+} elsif size :under 20K {
+	keep;
+} elsif size :over 400G {
+	keep;
+} elsif size :under 1 {
+	keep;
+}
