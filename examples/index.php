@@ -1,6 +1,6 @@
 <?php
 
-include_once 'lib/class.parser.php';
+include_once '../lib/class.parser.php';
 
 $filename = 'script.siv';
 $fd = fopen($filename, 'r');
