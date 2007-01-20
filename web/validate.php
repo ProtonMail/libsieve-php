@@ -17,9 +17,9 @@ if (isset($_POST['script'])) {
 	$parser = new Parser();
 	$ret = $parser->parse(stripslashes($_POST['script']));
 
-	print '</pre><hr size="1"/>Result: <span style="color:'. ($ret ? 'green': 'tomato') .';font-weight:bold">' . $parser->status_text ."</span>\n";
+	print '</pre><hr size="1"/>Result: <span style="color:'. ($ret ? 'green': 'tomato') .';font-weight:bold">' . htmlentities($parser->status_text) ."</span>\n";
 	print '<hr size="1"/><pre style="font-size:x-small">';
-	print htmlentities($parser->dumpParseTree());
+	print htmlentities($parser->tree_->dump());
 }
 else {
 	print "No script to validate.";
