@@ -140,12 +140,12 @@ class Tree
 		if ($last)
 		{
 			$infix = '`--- ';
-			$c_prefix = $prefix . '   ';
+			$child_prefix = $prefix . '   ';
 		}
 		else
 		{
 			$infix = '|--- ';
-			$c_prefix = $prefix . '|  ';
+			$child_prefix = $prefix . '|  ';
 		}
 
 		$node = $this->nodes_[$node_id];
@@ -158,16 +158,15 @@ class Tree
 			$this->dump_ .= "$prefix$infix$node\n";
 		}
 
-		$childs = $this->childs_[$node_id];
-		for ($i=0; $i<count($childs); ++$i)
+		if (isset($this->childs_[$node_id]))
 		{
-			$c_last = false;
-			if ($i+1 == count($childs))
-			{
-				$c_last = true;
-			}
+			$childs = $this->childs_[$node_id];
+			$last_child = count($childs);
 
-			$this->doDump_($childs[$i], $c_prefix, $c_last);
+			for ($i=1; $i <= $last_child; ++$i)
+			{
+				$this->doDump_($childs[$i-1], $child_prefix, ($i == $last_child ? true : false));
+			}
 		}
 	}
 }
