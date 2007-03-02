@@ -10,8 +10,8 @@
 	<h1>Welcome to this lousy page</h1>
 	<p>
 		Hack in a Sieve script in the textarea below and try the sieve parser of libsieve-php in action.<br/>
-		Note that currently only the <span style="font-weight:bold">base spec</span> and extensions <span style="font-weight:bold">vacation, subaddress, relational, comparator-i;ascii-numeric</span> are supported.<br/>
-		If you find any bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&group_id=184171&atid=908185">report them via the projects bug tracker</a>.<br/>
+		Note that currently only the <span style="font-weight:bold">base spec</span> and extensions <span style="font-weight:bold">vacation, subaddress, relational, comparator-i;ascii-numeric, regex, imapflags</span> are supported.<br/>
+		If you find any bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185">report them via the projects bug tracker</a>.<br/>
 		I'm especially happy for reports on malformed scripts getting through and misleading parser status messages.
 	</p>
 	<textarea name="script" cols="80" rows="25">require "fileinto";
