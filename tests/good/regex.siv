@@ -1,0 +1,4 @@
+require ["regex"];
+
+if header :regex "a" ["[:digit:]]+"]
+	{ keep; }

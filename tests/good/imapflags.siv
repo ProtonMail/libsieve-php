@@ -1,0 +1,13 @@
+require "imapflags";
+require "reject";
+
+if true {
+	mark;
+	unmark;unmark;
+	mark; mark;
+	reject "fooo";
+}
+
+setflag ["foo", "bar", "baz"];
+addflag "qaz";
+removeflag "pateng";

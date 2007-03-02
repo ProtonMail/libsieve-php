@@ -10,8 +10,9 @@ class Semantics
 	var $s_;
 	var $unknown;
 	var $message;
+	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag)';
 	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
-	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress)';
+	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags)';
 
 	function Semantics($command)
 	{
@@ -26,7 +27,7 @@ class Semantics
 		case 'require':
 			/* require <capabilities: string-list> */
 			$this->s_ = array(
-				'valid_after' => array('script-start', 'require'),
+				'valid_after' => '(script-start|require)',
 				'arguments' => array(
 					array('class' => 'string', 'list' => true, 'name' => 'require-string', 'occurrences' => '1', 'call' => 'setRequire_', 'values' => array(
 						array('occurrences' => '+', 'regex' => '"'. $this->requireStrings_ .'"'),
@@ -39,8 +40,7 @@ class Semantics
 		case 'if':
 			/* if <test> <block> */
 			$this->s_ = array(
-				'valid_after' => array('script-start', 'require', 'if', 'elsif', 'else',
-				                       'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard'),
+				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_),
 				'arguments' => array(
 					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
@@ -55,7 +55,7 @@ class Semantics
 		case 'elsif':
 			/* elsif <test> <block> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif'),
+				'valid_after' => '(if|elsif)',
 				'arguments' => array(
 					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
@@ -70,7 +70,7 @@ class Semantics
 		case 'else':
 			/* else <block> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif'),
+				'valid_after' => '(if|elsif)',
 				'arguments' => array(
 					array('class' => 'block-start', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '{', 'name' => 'block')
@@ -83,13 +83,12 @@ class Semantics
 		/*******************
 		 * action commands
 		 */
+		case 'discard':
 		case 'keep':
 		case 'stop':
-		case 'discard':
-			/* keep / stop / discard */
+			/* discard/ keep / stop */
 			$this->s_ = array(
-				'valid_after' => array('script-start', 'require', 'if', 'elsif', 'else',
-				                       'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard')
+				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_)
 			);
 			break;
 
@@ -97,7 +96,7 @@ class Semantics
 			/* fileinto <folder: string> */
 			$this->s_ = array(
 				'requires' => 'fileinto',
-				'valid_after' => array('require', 'if', 'elsif', 'else', 'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard'),
+				'valid_after' => $this->nonTestCommands_,
 				'arguments' => array(
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'folder')
@@ -106,10 +105,19 @@ class Semantics
 			);
 			break;
 
+		case 'mark':
+		case 'unmark':
+			/* mark / unmark */
+			$this->s_ = array(
+				'requires' => 'imapflags',
+				'valid_after' => $this->nonTestCommands_
+			);
+			break;
+
 		case 'redirect':
 			/* redirect <address: string> */
 			$this->s_ = array(
-				'valid_after' => array('script-start', 'require', 'if', 'elsif', 'else', 'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard'),
+				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_),
 				'arguments' => array(
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'address')
@@ -122,10 +130,27 @@ class Semantics
 			/* reject <reason: string> */
 			$this->s_ = array(
 				'requires' => 'reject',
-				'valid_after' => array('require', 'if', 'elsif', 'else', 'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard'),
+				'valid_after' => $this->nonTestCommands_,
 				'arguments' => array(
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'reason')
+					))
+				)
+			);
+			break;
+
+		case 'setflag':
+		case 'addflag':
+		case 'removeflag':
+			/* setflag <flag-list: string-list> */
+			/* addflag <flag-list: string-list> */
+			/* removeflag <flag-list: string-list> */
+			$this->s_ = array(
+				'requires' => 'imapflags',
+				'valid_after' =>$this->nonTestCommands_,
+				'arguments' => array(
+					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
+						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'key')
 					))
 				)
 			);
@@ -135,7 +160,7 @@ class Semantics
 			/* vacation [":days" number] [":addresses" string-list] [":subject" string] [":mime"] <reason: string> */
 			$this->s_ = array(
 				'requires' => 'vacation',
-				'valid_after' => array('require', 'if', 'elsif', 'else', 'reject', 'fileinto', 'redirect', 'stop', 'keep', 'discard'),
+				'valid_after' => $this->nonTestCommands_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':days', 'name' => 'days',
@@ -178,7 +203,7 @@ class Semantics
 				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value)', 'call' => 'setMatchType_', 'name' => 'match-type'),
+						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
 						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
 						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
 							'add' => array(
@@ -223,7 +248,7 @@ class Semantics
 				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value)', 'call' => 'setMatchType_', 'name' => 'match-type'),
+						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
 						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
 						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
 							'add' => array(
@@ -262,7 +287,7 @@ class Semantics
 				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value)', 'call' => 'setMatchType_', 'name' => 'match-type'),
+						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
 						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
 							'add' => array(
 								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
@@ -335,10 +360,10 @@ class Semantics
 
 	function setMatchType_($text)
 	{
+		global $requires_;
 		// Do special processing for relational test extension
 		if ($text == ':count' || $text == ':value')
 		{
-			global $requires_;
 			if (!in_array('"relational"', $requires_))
 			{
 				$this->message = 'missing require for match-type '. $text;
@@ -350,6 +375,12 @@ class Semantics
 					array('occurrences' => '1', 'regex' => '"(lt|le|eq|ge|gt|ne)"', 'name' => 'relation-string'),
 				))
 			);
+		}
+		// Do special processing for regex match-type extension
+		else if ($text == ':regex' && !in_array('"regex"', $requires_))
+		{
+			$this->message = 'missing require for match-type '. $text;
+			return false;
 		}
 		$this->matchType_ = $text;
 		return true;
@@ -389,7 +420,7 @@ class Semantics
 
 	function validAfter($prev)
 	{
-		return in_array($prev, $this->s_['valid_after']);
+		return ereg($this->s_['valid_after'], $prev);
 	}
 
 	function validClass_($class, $id)
