@@ -1,3 +1,9 @@
 if allof(true) {
 	stop;
 }
+if allof(true, true) {
+	stop;
+}
+elsif allof(true, true, false) {
+	stop;
+}
