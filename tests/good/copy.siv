@@ -1,0 +1,4 @@
+require ["fileinto", "copy"];
+
+fileinto :copy "INBOX.foo";
+redirect :copy "me@there.invalid";

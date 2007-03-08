@@ -105,16 +105,11 @@ class Parser
 
 		// Get and check a command token
 		$token = $this->scanner_->nextToken();
-		$semantics = new Semantics($token['text']);
-		if ($semantics->unknown)
-		{
-			return $this->error_('unknown command: '. $token['text']);
-		}
-
 		$last = $this->tree_->getLastNode($parent_id);
-		if (!$semantics->validAfter($last['text']))
+		$semantics = new Semantics($token['text']);
+		if (!$semantics->validCommand($last['text'], $token['line']))
 		{
-			return $this->error_('"'. $token['text'] .'" may not appear after "'. $last['text'] .'"');
+			return $this->error_($semantics->message);
 		}
 
 		// Process eventual arguments

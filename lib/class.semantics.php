@@ -12,7 +12,7 @@ class Semantics
 	var $message;
 	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag)';
 	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
-	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags)';
+	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags|copy)';
 
 	function Semantics($command)
 	{
@@ -86,18 +86,21 @@ class Semantics
 		case 'discard':
 		case 'keep':
 		case 'stop':
-			/* discard/ keep / stop */
+			/* discard / keep / stop */
 			$this->s_ = array(
 				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_)
 			);
 			break;
 
 		case 'fileinto':
-			/* fileinto <folder: string> */
+			/* fileinto [":copy"] <folder: string> */
 			$this->s_ = array(
 				'requires' => 'fileinto',
 				'valid_after' => $this->nonTestCommands_,
 				'arguments' => array(
+					array('class' => 'tag', 'occurrences' => '?', 'values' => array(
+						array('occurrences' => '?', 'regex' => ':copy', 'requires' => 'copy', 'name' => 'copy')
+					)),
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'folder')
 					))
@@ -115,10 +118,13 @@ class Semantics
 			break;
 
 		case 'redirect':
-			/* redirect <address: string> */
+			/* redirect [":copy"] <address: string> */
 			$this->s_ = array(
 				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_),
 				'arguments' => array(
+					array('class' => 'tag', 'occurrences' => '?', 'values' => array(
+						array('occurrences' => '?', 'regex' => ':copy', 'requires' => 'copy', 'name' => 'size-type')
+					)),
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'address')
 					))
@@ -418,9 +424,32 @@ class Semantics
 		return true;
 	}
 
-	function validAfter($prev)
+	function validCommand($prev, $line)
 	{
-		return ereg($this->s_['valid_after'], $prev);
+		// Check if command is known
+		if ($this->unknown)
+		{
+			$this->message = 'line '. $line .': unknown command "'. $this->command_ .'"';
+			return false;
+		}
+
+		// Check if the command needs to be required
+		global $requires_;
+		if (isset($this->s_['requires']) &&
+		    !in_array('"'. $this->s_['requires'] .'"', $requires_))
+		{
+			$this->message = 'line '. $line .': missing require for command "'. $this->command_ .'"';
+			return false;
+		}
+
+		// Check if command may appear here
+		if (!ereg($this->s_['valid_after'], $prev))
+		{
+			$this->message = 'line '. $line .': "'. $this->command_ .'" may not appear after "'. $prev .'"';
+			return false;
+		}
+
+		return true;
 	}
 
 	function validClass_($class, $id)
@@ -482,17 +511,8 @@ class Semantics
 
 	function validToken($class, &$text, &$line)
 	{
-		$name = $class . ($class != $text ? " $text" : '');
-
-		// Check if the command needs to be required
-		// TODO: move this to somewhere more appropriate
 		global $requires_;
-		if (isset($this->s_['requires']) &&
-		    !in_array('"'.$this->s_['requires'].'"', $requires_))
-		{
-			$this->message = 'line '. $line .': missing require for '. $this->command_;
-			return false;
-		}
+		$name = $class . ($class != $text ? " $text" : '');
 
 		// Make sure the argument has a valid class
 		if (!$this->validClass_($class, $name))
