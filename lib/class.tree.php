@@ -106,9 +106,9 @@ class Tree
 		for ($i=count($childs); $i>0; --$i)
 		{
 			$node = $this->getNode($childs[$i-1]);
-			if ($node['text'] == '{')
+			if (in_array($node['text'], array('{', '(', ',')))
 			{
-				// return command owning the block
+				// return command owning the block or list
 				return $this->getNode($parent_id);
 			}
 			if ($node['class'] != 'comment')
