@@ -99,27 +99,6 @@ class Tree
 		return $this->nodes_[$node_id];
 	}
 
-	function getLastNode($parent_id)
-	{
-		$childs = $this->getChilds($parent_id);
-
-		for ($i=count($childs); $i>0; --$i)
-		{
-			$node = $this->getNode($childs[$i-1]);
-			if (in_array($node['text'], array('{', '(', ',')))
-			{
-				// return command owning the block or list
-				return $this->getNode($parent_id);
-			}
-			if ($node['class'] != 'comment')
-			{
-				return $node;
-			}
-		}
-
-		return $this->getNode($parent_id);
-	}
-
 	function setDumpFunc($callback)
 	{
 		if ($callback == NULL || is_callable($callback))

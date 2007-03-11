@@ -54,6 +54,30 @@ class Parser
 		return strval($token);
 	}
 
+	function getPrevTokenText_($parent_id)
+	{
+		$childs = $this->tree_->getChilds($parent_id);
+
+		for ($i=count($childs); $i>0; --$i)
+		{
+			$prev = $this->tree_->getNode($childs[$i-1]);
+
+			if (in_array($prev['text'], array('{', '(', ',')))
+			{
+				// use command owning a block or list
+				$prev = $this->tree_->getNode($parent_id);
+			}
+
+			if ($prev['class'] != 'comment')
+			{
+				return $prev['text'];
+			}
+		}
+
+		$prev = $this->tree_->getNode($parent_id);
+		return $prev['text'];
+	}
+
 	function getSemantics_($token_text)
 	{
 		$semantics = new Semantics($token_text);
@@ -128,9 +152,8 @@ class Parser
 
 		// Get and check a command token
 		$token = $this->scanner_->nextToken();
-		$last = $this->tree_->getLastNode($parent_id);
 		$semantics = $this->getSemantics_($token['text']);
-		if (!$semantics->validCommand($last['text'], $token['line']))
+		if (!$semantics->validCommand($this->getPrevTokenText_($parent_id), $token['line']))
 		{
 			return $this->error_($semantics->message);
 		}
@@ -298,8 +321,7 @@ class Parser
 
 		// Get semantics for this test command
 		$this_semantics = $this->getSemantics_($token['text']);
-		$last = $this->tree_->getLastNode($parent_id);
-		if (!$this_semantics->validCommand($last['text'], $token['line']))
+		if (!$this_semantics->validCommand($this->getPrevTokenText_($parent_id), $token['line']))
 		{
 			return $this->error_($this_semantics->message);
 		}
