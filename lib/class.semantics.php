@@ -1,9 +1,10 @@
 <?php
 
-$requires_ = array();
-
 class Semantics
 {
+	var $registerExtensionFn_;
+	var $isExtensionRegisteredFn_;
+
 	var $command_;
 	var $comparator_;
 	var $matchType_;
@@ -11,6 +12,7 @@ class Semantics
 	var $unknown;
 	var $message;
 	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag)';
+	var $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
 	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
 	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags|copy)';
 
@@ -206,7 +208,7 @@ class Semantics
 		case 'address':
 			/* address [address-part: tag] [comparator: tag] [match-type: tag] <header-list: string-list> <key-list: string-list> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
@@ -235,7 +237,7 @@ class Semantics
 			/* allof <tests: test-list>
 			   anyof <tests: test-list> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'left-parant', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '\(', 'name' => 'test-list')
@@ -251,7 +253,7 @@ class Semantics
 			/* envelope [address-part: tag] [comparator: tag] [match-type: tag] <envelope-part: string-list> <key-list: string-list> */
 			$this->s_ = array(
 				'requires' => 'envelope',
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
@@ -278,7 +280,7 @@ class Semantics
 		case 'exists':
 			/* exists <header-names: string-list> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'header')
@@ -290,7 +292,7 @@ class Semantics
 		case 'header':
 			/* header [comparator: tag] [match-type: tag] <header-names: string-list> <key-list: string-list> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
 						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
@@ -316,7 +318,7 @@ class Semantics
 		case 'not':
 			/* not <test> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
@@ -328,7 +330,7 @@ class Semantics
 		case 'size':
 			/* size <":over" / ":under"> <limit: number> */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not'),
+				'valid_after' => $this->testsValidAfter_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => ':(over|under)', 'name' => 'size-type')
@@ -344,7 +346,7 @@ class Semantics
 		case 'false':
 			/* true / false */
 			$this->s_ = array(
-				'valid_after' => array('if', 'elsif', 'anyof', 'allof', 'not')
+				'valid_after' => $this->testsValidAfter_
 			);
 			break;
 
@@ -357,20 +359,32 @@ class Semantics
 		}
 	}
 
-	function setRequire_($text)
+	function setExtensionFuncs($setFn, $checkFn)
 	{
-		global $requires_;
-		array_push($requires_, $text);
+		if (is_callable($setFn) && is_callable($checkFn))
+		{
+			$this->registerExtensionFn_ = $setFn;
+			$this->isExtensionRegisteredFn_ = $checkFn;
+		}
+	}
+
+	function setRequire_($extension)
+	{
+		call_user_func($this->registerExtensionFn_, $extension);
 		return true;
+	}
+
+	function wasRequired_($extension)
+	{
+		return call_user_func($this->isExtensionRegisteredFn_, $extension);
 	}
 
 	function setMatchType_($text)
 	{
-		global $requires_;
 		// Do special processing for relational test extension
 		if ($text == ':count' || $text == ':value')
 		{
-			if (!in_array('"relational"', $requires_))
+			if (!$this->wasRequired_('relational'))
 			{
 				$this->message = 'missing require for match-type '. $text;
 				return false;
@@ -383,7 +397,7 @@ class Semantics
 			);
 		}
 		// Do special processing for regex match-type extension
-		else if ($text == ':regex' && !in_array('"regex"', $requires_))
+		else if ($text == ':regex' && !$this->wasRequired_('regex'))
 		{
 			$this->message = 'missing require for match-type '. $text;
 			return false;
@@ -402,8 +416,7 @@ class Semantics
 	{
 		if ($text == ':user' || $text == ':detail')
 		{
-			global $requires_;
-			if (!in_array('"subaddress"', $requires_))
+			if (!$this->wasRequired_('subaddress'))
 			{
 				$this->message = 'missing require for tag '. $text;
 				return false;
@@ -434,9 +447,7 @@ class Semantics
 		}
 
 		// Check if the command needs to be required
-		global $requires_;
-		if (isset($this->s_['requires']) &&
-		    !in_array('"'. $this->s_['requires'] .'"', $requires_))
+		if (isset($this->s_['requires']) && !$this->wasRequired_($this->s_['requires']))
 		{
 			$this->message = 'line '. $line .': missing require for command "'. $this->command_ .'"';
 			return false;
@@ -511,7 +522,6 @@ class Semantics
 
 	function validToken($class, &$text, &$line)
 	{
-		global $requires_;
 		$name = $class . ($class != $text ? " $text" : '');
 
 		// Make sure the argument has a valid class
@@ -527,8 +537,7 @@ class Semantics
 			if (preg_match('/^'. $val['regex'] .'$/m', $text))
 			{
 				// Check if the argument value needs a 'require'
-				if (isset($val['requires']) &&
-					!in_array('"'.$val['requires'].'"', $requires_))
+				if (isset($val['requires']) && !$this->wasRequired_($val['requires']))
 				{
 					$this->message = 'line '. $line .': missing require for '. $val['name'] .' '. $text;
 					return false;

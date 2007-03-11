@@ -10,11 +10,13 @@ class Parser
 	var $script_;
 	var $tree_;
 	var $status_;
+	var $registeredExtensions_;
 
 	var $status_text;
 
 	function parse($script)
 	{
+		$this->registeredExtensions_ = array();
 		$this->status_text = "incomplete";
 
 		$this->script_ = $script;
@@ -52,6 +54,23 @@ class Parser
 		return strval($token);
 	}
 
+	function getSemantics_($token_text)
+	{
+		$semantics = new Semantics($token_text);
+		$semantics->setExtensionFuncs(array(&$this, 'registerExtension_'), array(&$this, 'isExtensionRegistered_'));
+		return $semantics;
+	}
+
+	function registerExtension_($extension)
+	{
+		array_push($this->registeredExtensions_, str_replace('"', '', $extension));
+	}
+
+	function isExtensionRegistered_($extension)
+	{
+		return (in_array($extension, $this->registeredExtensions_) ? true : false);
+	}
+
 	function success_($text = null)
 	{
 		if ($text != null)
@@ -78,6 +97,10 @@ class Parser
 		$this->status_ = true;
 		return false;
 	}
+
+	/*******************************************************************************
+	 * methods for recursive descent start below
+	 */
 
 	function comment_($token)
 	{
@@ -106,7 +129,7 @@ class Parser
 		// Get and check a command token
 		$token = $this->scanner_->nextToken();
 		$last = $this->tree_->getLastNode($parent_id);
-		$semantics = new Semantics($token['text']);
+		$semantics = $this->getSemantics_($token['text']);
 		if (!$semantics->validCommand($last['text'], $token['line']))
 		{
 			return $this->error_($semantics->message);
@@ -274,10 +297,11 @@ class Parser
 		}
 
 		// Get semantics for this test command
-		$this_semantics = new Semantics($token['text']);
-		if ($this_semantics->unknown)
+		$this_semantics = $this->getSemantics_($token['text']);
+		$last = $this->tree_->getLastNode($parent_id);
+		if (!$this_semantics->validCommand($last['text'], $token['line']))
 		{
-			return $this->error_('unknown test: '. $token['text']);
+			return $this->error_($this_semantics->message);
 		}
 
 		$this_node = $this->tree_->addChildTo($parent_id, $token);
