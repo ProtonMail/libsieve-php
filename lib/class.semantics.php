@@ -248,7 +248,7 @@ class Semantics
 				'valid_after' =>$this->nonTestCommands_,
 				'arguments' => array(
 					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'
+						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type',
 							'add' => array(
 								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
 									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'id')
