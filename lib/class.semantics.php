@@ -11,10 +11,10 @@ class Semantics
 	var $s_;
 	var $unknown;
 	var $message;
-	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag)';
+	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag|notify|denotify)';
 	var $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
 	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
-	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags|copy)';
+	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags|copy|notify)';
 
 	function Semantics($command)
 	{
@@ -196,6 +196,72 @@ class Semantics
 					)),
 					array('class' => 'string', 'occurrences' => '1', 'values' => array(
 						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'reason')
+					))
+				)
+			);
+			break;
+
+		case 'notify':
+			/* notify [":method" string] [":id" string] [":priority" <"1" / "2" / "3">] [":message" string] */
+			$this->s_ = array(
+				'requires' => 'notify',
+				'valid_after' =>$this->nonTestCommands_,
+				'arguments' => array(
+					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
+						array('occurrences' => '?', 'regex' => ':method', 'name' => 'method',
+							'add' => array(
+								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'method')
+								))
+							)
+						),
+						array('occurrences' => '?', 'regex' => ':id', 'name' => 'id',
+							'add' => array(
+								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'id')
+								))
+							)
+						),
+						array('occurrences' => '?', 'regex' => ':priority', 'name' => 'priority',
+							'add' => array(
+								array('class' => 'string', 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '1', 'regex' => '"(1|2|3)"', 'name' => 'priority')
+								))
+							)
+						),
+						array('occurrences' => '?', 'regex' => ':message', 'name' => 'message',
+							'add' => array(
+								array('class' => 'string', 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '1', 'regex' => '".*"', 'name' => 'message')
+								))
+							)
+						)
+					))
+				)
+			);
+			break;
+
+		case 'denotify':
+			/* denotify [match-type: tag  id: string] [":priority" <"1" / "2" / "3">] */
+			$this->s_ = array(
+				'requires' => 'notify',
+				'valid_after' =>$this->nonTestCommands_,
+				'arguments' => array(
+					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
+						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'
+							'add' => array(
+								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'id')
+								))
+							)
+						),
+						array('occurrences' => '?', 'regex' => ':priority', 'name' => 'priority',
+							'add' => array(
+								array('class' => 'string', 'occurrences' => '1', 'values' => array(
+									array('occurrences' => '1', 'regex' => '"(1|2|3)"', 'name' => 'priority')
+								))
+							)
+						)
 					))
 				)
 			);
