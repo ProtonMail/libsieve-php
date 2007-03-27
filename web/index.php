@@ -18,25 +18,25 @@
 	</p>
 	<p style="text-align:justify">
 		Next step will be to implement
-		writing support into the parser so that it can write out the scripts it read. The there will be added support for the
-		MANAGESIEVE protocol which will allow you to upload, download and manage scripts on a server. When all that is done I
-		will hack up some interface classes that will enable you to modify scripts without the knowledge of the libraries
-		internals.
+		writing support into the parser so that it can write out the scripts it read. Then there will be added support for the
+		<a href="http://tools.ietf.org/html/draft-martin-managesieve">MANAGESIEVE</a> protocol which will allow you to download
+		scripts from, upload them to and manage them on a server like timsieved. When all that is done I will hack up some
+		interface classes that will enable you to access and modify parsed scripts without the knowledge of the libraries internals.
 	</p>
 	<p>
 		<span style="font-weight:bold">Current state: ALPHA</span>. Try it, but don't expect it to be comfortable or bug free.
 	</p>
 	<p style="text-align:justify">
 		Hack in a Sieve script in the textarea below and try the sieve parser of libsieve-php in action.
-		Note that currently the <span style="font-weight:bold">base spec</span> and extensions <span style="font-weight:bold">vacation, subaddress, relational, comparator-i;ascii-numeric, regex, imapflags, copy, notify</span> are supported.
+		Note that currently the <span style="font-weight:bold">base spec</span> and the extensions <span style="font-weight:bold">vacation, subaddress, relational, comparator-i;ascii-numeric, regex, imapflags, copy</span> and <span style="font-weight:bold">notify</span> are supported by the parser.
 		If you find any bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185">report them via the projects bug tracker</a>.
-		I'm especially happy for reports on malformed scripts getting through and misleading parser status messages.
+		I'm especially happy for reports on malformed scripts getting through as well as misleading parser status messages.
 	</p>
 	
 	<form action="validate.php" method="post">
 		<textarea name="script" cols="80" rows="25">require "fileinto";
 if address :localpart ["To", "CC", "BCC"] ["heiko"] {
-	fileinto "INBOX.personal";
+    fileinto "INBOX.personal";
 }</textarea>
 		<p style="text-align:center"><input type="submit" value="Validate Sieve Script"/></p>
 	</form>
