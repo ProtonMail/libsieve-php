@@ -202,7 +202,7 @@ class Semantics
 			break;
 
 		case 'notify':
-			/* notify [":method" string] [":id" string] [":priority" <"1" / "2" / "3">] [":message" string] */
+			/* notify [":method" string] [":id" string] [<":low" / ":normal" / ":high">] [":message" string] */
 			$this->s_ = array(
 				'requires' => 'notify',
 				'valid_after' =>$this->nonTestCommands_,
@@ -222,13 +222,7 @@ class Semantics
 								))
 							)
 						),
-						array('occurrences' => '?', 'regex' => ':priority', 'name' => 'priority',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '1', 'regex' => '"(1|2|3)"', 'name' => 'priority')
-								))
-							)
-						),
+						array('occurrences' => '?', 'regex' => ':(low|normal|high)', 'name' => 'priority'),
 						array('occurrences' => '?', 'regex' => ':message', 'name' => 'message',
 							'add' => array(
 								array('class' => 'string', 'occurrences' => '1', 'values' => array(
@@ -242,7 +236,7 @@ class Semantics
 			break;
 
 		case 'denotify':
-			/* denotify [match-type: tag  id: string] [":priority" <"1" / "2" / "3">] */
+			/* denotify [match-type: tag  id: string] [<":low" / ":normal" / ":high">] */
 			$this->s_ = array(
 				'requires' => 'notify',
 				'valid_after' =>$this->nonTestCommands_,
@@ -255,13 +249,7 @@ class Semantics
 								))
 							)
 						),
-						array('occurrences' => '?', 'regex' => ':priority', 'name' => 'priority',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '1', 'regex' => '"(1|2|3)"', 'name' => 'priority')
-								))
-							)
-						)
+						array('occurrences' => '?', 'regex' => ':(low|normal|high)', 'name' => 'priority')
 					))
 				)
 			);
