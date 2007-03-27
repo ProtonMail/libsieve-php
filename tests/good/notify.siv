@@ -1,0 +1,7 @@
+require "notify";
+
+notify :id "foobar" :method "proto:heiko@foobar.invalid" :high :message "MSG";
+notify :low :message "[SIEVE] ${from}: ${subject}";
+denotify :is "foobar" :high;
+
+keep;
