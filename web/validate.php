@@ -7,13 +7,13 @@
 </head>
 
 <body style="font-family:sans-serif">
-<div style="width:760px;margin-left:auto; margin-right:auto; overflow:auto">
+<div style="width:760px;margin-left:auto; margin-right:auto">
 
 <p>
 	[<a href="javascript:history.back()">back</a>] [<a href="index.php">home</a>]
 </p>
 
-<div style="border-style:dashed; border-width:2px; border-color:silver; padding:10px">
+<div style="border-style:dashed; border-width:2px; border-color:silver; padding:10px; overflow:auto">
 Script to validate:<br/>
 <pre><?php
 require_once 'lib/libsieve.php';
