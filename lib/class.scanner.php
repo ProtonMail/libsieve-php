@@ -17,11 +17,11 @@ class Scanner
 		$this->tokenize($script);
 	}
 
-	function setCommentFunc($callback)
+	function setPassthroughFunc($callback)
 	{
 		if ($callback == null || is_callable($callback))
 		{
-			$this->commentFn_ = $callback;
+			$this->ptFn_ = $callback;
 		}
 	}
 
@@ -29,6 +29,7 @@ class Scanner
 	{
 		$pos = 0;
 		$line = 1;
+
 		$script_length = mb_strlen($script);
 
 		while ($pos < $script_length)
@@ -39,14 +40,12 @@ class Scanner
 				{
 					$length = mb_strlen($match[0]);
 
-					if ($class != 'whitespace')
-					{
-						array_push($this->tokens_, array(
-							'class' => $class,
-							'text'  => chop(mb_substr($script, $pos, $length)),
-							'line'  => $line,
-						));
-					}
+					array_push($this->tokens_, array(
+						'class' => $class,
+						'text'  => mb_substr($script, $pos, $length),
+						'line'  => $line
+					));
+
 					if ($class == 'unknown')
 					{
 						return;
@@ -73,7 +72,7 @@ class Scanner
 		{
 			$next = $this->tokens_[$this->tokenPos_ + $offset++]['class'];
 		}
-		while ($next == 'comment');
+		while ($next == 'comment' || $next == 'whitespace');
 
 		if (is_array($class))
 		{
@@ -94,11 +93,12 @@ class Scanner
 	function nextToken()
 	{
 		$token = $this->tokens_[$this->tokenPos_++];
-		while ($token['class'] == 'comment')
+		while ($token['class'] == 'comment' ||
+		       $token['class'] == 'whitespace')
 		{
-			if ($this->commentFn_ != null)
+			if ($this->ptFn_ != null)
 			{
-				call_user_func($this->commentFn_, $token);
+				call_user_func($this->ptFn_, $token);
 			}
 			$token = $this->tokens_[$this->tokenPos_++];
 		}
@@ -108,13 +108,13 @@ class Scanner
 	function scriptStart()
 	{
 		return array(
-			'class' => 'script-start',
-			'text'  => 'script-start',
-			'line'  => 1,
+			'class'  => 'script-start',
+			'text'   => 'script-start',
+			'line'   => 1
 		);
 	}
 
-	var $commentFn_ = null;
+	var $ptFn_ = null;
 	var $tokenPos_ = 0;
 	var $tokens_ = array();
 	var $token_match_ = array (

@@ -23,7 +23,7 @@ class Parser
 		$this->tree_ = new Tree(Scanner::scriptStart());
 		$this->tree_->setDumpFunc(array(&$this, 'dumpToken_'));
 		$this->scanner_ = new Scanner($this->script_);
-		$this->scanner_->setCommentFunc(array($this, 'comment_'));
+		$this->scanner_->setPassthroughFunc(array($this, 'commentOrWhitespace_'));
 
 		if ($this->commands_($this->tree_->getRoot()) &&
 		    $this->scanner_->nextTokenIs('script-end'))
@@ -43,10 +43,11 @@ class Parser
 	{
 		if (is_array($token))
 		{
-			$str = "<" . $token['text'] . "> ";
-			foreach ($token as $k => $v)
+			$str = "<" . preg_replace(array("/\r/", "/\n/", "/\t/"), array('\r', '\n', '\t'), $token['text']) . "> ";
+			foreach ($token as $key => $val)
 			{
-				$str .= " $k:$v";
+				$val = preg_replace(array("/\r/", "/\n/", "/\t/"), array('\r', '\n', '\t'), $val);
+				$str .= " $key:$val";
 			}
 			return $str;
 		}
@@ -68,7 +69,7 @@ class Parser
 				$prev = $this->tree_->getNode($parent_id);
 			}
 
-			if ($prev['class'] != 'comment')
+			if ($prev['class'] != 'comment' && $prev['class'] != 'whitespace')
 			{
 				return $prev['text'];
 			}
@@ -126,7 +127,7 @@ class Parser
 	 * methods for recursive descent start below
 	 */
 
-	function comment_($token)
+	function commentOrWhitespace_($token)
 	{
 		$this->tree_->addChild($token);
 	}
