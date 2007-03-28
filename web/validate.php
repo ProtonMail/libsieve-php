@@ -6,7 +6,7 @@
 	<title>libsieve-php - A PHP Sieve library</title>
 </head>
 
-<body style="font-family:sans-serif; font-size:medium">
+<body style="font-family:sans-serif; font-size:13px">
 <div style="width:760px; margin-left:auto; margin-right:auto">
 
 <p>
