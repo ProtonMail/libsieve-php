@@ -34,11 +34,13 @@
 	</p>
 	
 	<form action="validate.php" method="post">
-		<textarea name="script" cols="80" rows="25">require "fileinto";
+		<p style="text-align:center">
+			<textarea name="script" cols="80" rows="25">require "fileinto";
 if address :localpart ["To", "CC", "BCC"] ["heiko"] {
     fileinto "INBOX.personal";
 }</textarea>
-		<p style="text-align:center"><input type="submit" value="Validate Sieve Script"/></p>
+			<input type="submit" value="Validate Sieve Script"/>
+		</p>
 	</form>
 </div>
 
