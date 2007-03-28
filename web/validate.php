@@ -6,8 +6,8 @@
 	<title>libsieve-php - A PHP Sieve library</title>
 </head>
 
-<body style="font-family:sans-serif">
-<div style="width:760px;margin-left:auto; margin-right:auto">
+<body style="font-family:sans-serif; font-size:medium">
+<div style="width:760px; margin-left:auto; margin-right:auto">
 
 <p>
 	[<a href="javascript:history.back()">back</a>] [<a href="index.php">home</a>]

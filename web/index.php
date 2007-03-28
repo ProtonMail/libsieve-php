@@ -5,7 +5,7 @@
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<title>libsieve-php - A PHP Sieve library</title>
 </head>
-<body style="font-family:sans-serif">
+<body style="font-family:sans-serif; font-size:medium">
 <div style="width:760px; margin-left:auto; margin-right:auto;">
 
 <div style="border-style:dashed; border-width:2px; border-color:silver; padding:10px">
