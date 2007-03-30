@@ -43,11 +43,10 @@ class Parser
 	{
 		if (is_array($token))
 		{
-			$str = "<" . preg_replace(array("/\r/", "/\n/", "/\t/"), array('\r', '\n', '\t'), $token['text']) . "> ";
+			$str = "<" . strtr($token['text'], array("\r" => '\r', "\n" => '\n', "\t" => '\t')) . "> ";
 			foreach ($token as $key => $val)
 			{
-				$val = preg_replace(array("/\r/", "/\n/", "/\t/"), array('\r', '\n', '\t'), $val);
-				$str .= " $key:$val";
+				$str .= " $key:". strtr($val, array("\r" => '\r', "\n" => '\n', "\t" => '\t'));
 			}
 			return $str;
 		}
