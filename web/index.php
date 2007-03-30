@@ -6,12 +6,12 @@
 	<title>libsieve-php - A PHP Sieve library</title>
 </head>
 <body style="font-family:sans-serif; font-size:13px">
-<div style="width:760px; margin-left:auto; margin-right:auto;">
+<div style="width:760px; margin-left:auto; margin-right:auto">
 
 <div style="border-style:dashed; border-width:2px; border-color:silver; padding:10px">
 	<h1 style="text-align:center">Welcome to this lousy page</h1>
 	<p style="text-align:justify">
-		<span style="font-weight:bold">libsieve-php</span> is aiming at being a Sieve [<a href="http://tools.ietf.org/html/rfc3028">RFC 3028</a>]
+		<span style="font-family:monospace">libsieve-php</span> is aiming at being a Sieve [<a href="http://tools.ietf.org/html/rfc3028">RFC 3028</a>]
 		mail filtering language library. Once finished you'll be able to manage sieve scripts with it. It currently consists
 		of a Sieve script parser that supports some extensions (mostly the ones Cyrus IMAPd supports, since the author wants
 		to use it with his mailserver).
@@ -24,13 +24,17 @@
 		interface classes that will enable you to access and modify parsed scripts without the knowledge of the libraries internals.
 	</p>
 	<p>
-		<span style="font-weight:bold">Current state: ALPHA</span>. Try it, but don't expect it to be comfortable or bug free.
+		<span style="font-weight:bold">Current state: ALPHA</span>. <a href="http://sourceforge.net/svn/?group_id=184171">Try it</a>,
+		but don't expect it to be comfortable or bug free.
 	</p>
 	<p style="text-align:justify">
 		Hack in a Sieve script in the textarea below and try the sieve parser of libsieve-php in action.
-		Note that currently the <span style="font-weight:bold">base spec</span> and the extensions <span style="font-weight:bold">vacation, subaddress, relational, comparator-i;ascii-numeric, regex, imapflags, copy</span> and <span style="font-weight:bold">notify</span> are supported by the parser.
-		If you find any bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185">report them via the projects bug tracker</a>.
-		I'm especially happy for reports on malformed scripts getting through as well as misleading parser status messages.
+		Note that currently the <span style="font-family:monospace">base spec</span> and the extensions
+		<span style="font-family:monospace">vacation, subaddress, relational, regex, imapflags, copy</span>
+		and <span style="font-family:monospace">notify</span> are supported by the parser. If you find any
+		bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185">report
+		them via the projects bug tracker</a>. I'm especially happy for reports on malformed scripts getting
+		through as well as misleading parser status messages.
 	</p>
 	
 	<form action="validate.php" method="post">
