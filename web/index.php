@@ -2,7 +2,6 @@
 
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<title>libsieve-php - A PHP Sieve library</title>
 </head>
 <body style="font-family:sans-serif; font-size:13px">
