@@ -13,7 +13,7 @@ class Semantics
 	protected $matchType_;
 	protected $s_;
 	protected $deps_ = array();
-	protected $commands_ = 'require|if|elsif|else|redirect|stop|keep|discard|notify|denotify';
+	protected $commands_ = 'require|if|elsif|else|redirect|stop|keep|discard';
 	protected $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
 	protected $tests_ = 'address|header|size|allof|anyof|exists|not|true|false';
 	protected $comparators_ = 'i;(octet|ascii-casemap)';
