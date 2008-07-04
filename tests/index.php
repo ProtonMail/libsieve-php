@@ -33,17 +33,18 @@ foreach (array('good', 'bad') as $dir)
 				$sieved_error = ' title="'. htmlentities($sieved->error_raw[0] .' '. $sieved->error_raw[1]) .'"';
 			}
 
-			$parser = new Parser();
-			if ($parser->parse($script))
-			{
+			try {
+				$parser = new Parser();
+				$parser->parse($script);
+
 				$parser_bgcolor = $dir == 'good' ? 'lightgreen' : 'tomato';
 				$parser_status = 'good';
 				$parser_error = '';
 			}
-			else {
+			catch (Exception $e) {
 				$parser_bgcolor = $dir == 'bad' ? 'lightgreen' : 'tomato';
 				$parser_status = 'bad';
-				$parser_error = ' title="'. htmlentities($parser->status_text) .'"';
+				$parser_error = ' title="'. htmlentities($e->getMessage()) .'"';
 			}
 
 			print '<tr align="center" style="border-style:solid; border-left-style:none; border-right-style:none; border-width:1px">';
