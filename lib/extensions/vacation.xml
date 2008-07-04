@@ -1,0 +1,23 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="vacation">
+
+	<command name="vacation">
+		<parameter type="tag" name="days" occurrence="optional" regex="days">
+			<value type="number" name="period" />
+		</parameter>
+
+		<parameter type="tag" name="addresses" occurrence="optional" regex="addresses">
+			<value type="stringlist" name="address strings" />
+		</parameter>
+
+		<parameter type="tag" name="subject" occurrence="optional" regex="subject">
+			<value type="string" name="subject string" />
+		</parameter>
+
+		<parameter type="tag" name="mime" occurrence="optional" regex="mime" />
+
+		<parameter type="string" name="reason" />
+	</command>
+
+</extension>
