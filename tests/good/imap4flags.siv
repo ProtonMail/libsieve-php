@@ -1,0 +1,10 @@
+require "imap4flags";
+
+setflag "$a";
+removeflag "$a";
+addflag ["\\Deleted \\foo"];
+
+if hasflag ["\\Deleted", "\\foo"]
+{
+	keep :flags "\\New";
+}
