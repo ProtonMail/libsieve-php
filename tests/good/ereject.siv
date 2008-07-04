@@ -1,0 +1,4 @@
+require ["ereject"];
+ereject "Sorry, I can't take it anymore.";
+ereject "Really.";
+
