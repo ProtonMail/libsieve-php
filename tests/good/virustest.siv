@@ -1,0 +1,10 @@
+require ["virustest"
+	, "relational"
+	, "comparator-i;ascii-numeric"
+];
+
+if virustest :value "lt" :comparator "i;ascii-numeric" "0" {
+	discard;
+}
+
+keep;

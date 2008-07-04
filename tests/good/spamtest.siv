@@ -1,0 +1,8 @@
+require ["spamtest", "relational"
+       , "comparator-i;ascii-numeric"];
+
+if spamtest :value "lt" :comparator "i;ascii-numeric" "0" {
+	discard;
+}
+
+keep;
