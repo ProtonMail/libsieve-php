@@ -369,7 +369,7 @@ class Semantics
 	protected function requireStringsRegex_()
 	{
 		$extensions = implode('|', $this->registry_->requireStrings());
-		return (empty($extensions) ? '' : "\"($extensions)\"");
+		return '"(comparator-'. $this->comparators_ .(empty($extensions) ? '' : "|$extensions"). ')"';
 	}
 
 	protected function matchTypeRegex_()
