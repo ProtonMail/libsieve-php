@@ -1,0 +1,10 @@
+require "subaddress";
+
+if address :user :is [ "From", "To" ] "foo"
+  {
+	keep;
+  }
+elsif address :detail "BCC" "spam"
+  {
+	keep;
+  }
