@@ -1,26 +1,31 @@
 <?php
 
+require_once('class.extensions.php');
+require_once('class.token.php');
+require_once('class.exception.php');
+
 class Semantics
 {
-	var $registerExtensionFn_;
-	var $isExtensionRegisteredFn_;
+	protected static $requiredExtensions_ = array();
 
-	var $command_;
-	var $comparator_;
-	var $matchType_;
-	var $s_;
-	var $unknown;
-	var $message;
-	var $nonTestCommands_ = '(require|if|elsif|else|reject|fileinto|redirect|stop|keep|discard|mark|unmark|setflag|addflag|removeflag|notify|denotify)';
-	var $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
-	var $testCommands_ = '(address|envelope|header|size|allof|anyof|exists|not|true|false)';
-	var $requireStrings_ = '(envelope|fileinto|reject|vacation|relational|subaddress|regex|imapflags|copy|notify)';
+	protected $command_;
+	protected $comparator_;
+	protected $matchType_;
+	protected $s_;
+	protected $deps_ = array();
+	protected $commands_ = 'require|if|elsif|else|redirect|stop|keep|discard|notify|denotify';
+	protected $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
+	protected $tests_ = 'address|header|size|allof|anyof|exists|not|true|false';
+	protected $comparators_ = 'i;(octet|ascii-casemap)';
+	protected $addressParts_ = 'all|localpart|domain';
+	protected $matchTypes_ = 'is|contains|matches';
 
-	function Semantics($command)
+	public function __construct($token, $prevToken)
 	{
-		$this->command_ = $command;
-		$this->unknown = false;
-		switch ($command)
+		$this->registry_ = ExtensionRegistry::get();
+		$this->command_ = $token->text;
+
+		switch ($this->command_)
 		{
 
 		/********************
@@ -30,11 +35,14 @@ class Semantics
 			/* require <capabilities: string-list> */
 			$this->s_ = array(
 				'valid_after' => '(script-start|require)',
-				'arguments' => array(
-					array('class' => 'string', 'list' => true, 'name' => 'require-string', 'occurrences' => '1', 'call' => 'setRequire_', 'values' => array(
-						array('occurrences' => '+', 'regex' => '"'. $this->requireStrings_ .'"'),
-						array('occurrences' => '+', 'regex' => '"comparator-i;(octet|ascii-casemap|ascii-numeric)"')
-					))
+				'arguments'   => array(
+					array(
+						'occurrence' => '1',
+						'type'       => Token::StringList,
+						'name'       => 'require string',
+						'call'       => 'setRequire_',
+						'regex'      => $this->requireStringsRegex_()
+					)
 				)
 			);
 			break;
@@ -42,14 +50,19 @@ class Semantics
 		case 'if':
 			/* if <test> <block> */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_),
-				'arguments' => array(
-					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
-					)),
-					array('class' => 'block-start', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '{', 'name' => 'block')
-					))
+				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'arguments'   => array(
+					array(
+						'type'       => Token::Identifier,
+						'occurrence' => '1',
+						'regex'      => $this->testsRegex_(),
+						'name'       => 'test'
+					), array(
+						'type'       => Token::BlockStart,
+						'occurrence' => '1',
+						'regex'      => '{',
+						'name'       => 'block'
+					)
 				)
 			);
 			break;
@@ -58,13 +71,18 @@ class Semantics
 			/* elsif <test> <block> */
 			$this->s_ = array(
 				'valid_after' => '(if|elsif)',
-				'arguments' => array(
-					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
-					)),
-					array('class' => 'block-start', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '{', 'name' => 'block')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::Identifier,
+						'occurrence' => '1',
+						'regex'      => $this->testsRegex_(),
+						'name'       => 'test'
+					), array(
+						'type'       => Token::BlockStart,
+						'occurrence' => '1',
+						'regex'      => '{',
+						'name'       => 'block'
+					)
 				)
 			);
 			break;
@@ -73,10 +91,13 @@ class Semantics
 			/* else <block> */
 			$this->s_ = array(
 				'valid_after' => '(if|elsif)',
-				'arguments' => array(
-					array('class' => 'block-start', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '{', 'name' => 'block')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::BlockStart,
+						'occurrence' => '1',
+						'regex'      => '{',
+						'name'       => 'block'
+					)
 				)
 			);
 			break;
@@ -90,167 +111,22 @@ class Semantics
 		case 'stop':
 			/* discard / keep / stop */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_)
-			);
-			break;
-
-		case 'fileinto':
-			/* fileinto [":copy"] <folder: string> */
-			$this->s_ = array(
-				'requires' => 'fileinto',
-				'valid_after' => $this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '?', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':copy', 'requires' => 'copy', 'name' => 'copy')
-					)),
-					array('class' => 'string', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'folder')
-					))
-				)
-			);
-			break;
-
-		case 'mark':
-		case 'unmark':
-			/* mark / unmark */
-			$this->s_ = array(
-				'requires' => 'imapflags',
-				'valid_after' => $this->nonTestCommands_
+				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'arguments'   => array()
 			);
 			break;
 
 		case 'redirect':
-			/* redirect [":copy"] <address: string> */
+			/* redirect <address: string> */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->nonTestCommands_),
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '?', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':copy', 'requires' => 'copy', 'name' => 'size-type')
-					)),
-					array('class' => 'string', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'address')
-					))
-				)
-			);
-			break;
-
-		case 'reject':
-			/* reject <reason: string> */
-			$this->s_ = array(
-				'requires' => 'reject',
-				'valid_after' => $this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'string', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'reason')
-					))
-				)
-			);
-			break;
-
-		case 'setflag':
-		case 'addflag':
-		case 'removeflag':
-			/* setflag <flag-list: string-list> */
-			/* addflag <flag-list: string-list> */
-			/* removeflag <flag-list: string-list> */
-			$this->s_ = array(
-				'requires' => 'imapflags',
-				'valid_after' =>$this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'key')
-					))
-				)
-			);
-			break;
-
-		case 'vacation':
-			/* vacation [":days" number] [":addresses" string-list] [":subject" string] [":mime"] <reason: string> */
-			$this->s_ = array(
-				'requires' => 'vacation',
-				'valid_after' => $this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':days', 'name' => 'days',
-							'add' => array(
-								array('class' => 'number', 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '1', 'regex' => '.*', 'name' => 'period')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':addresses', 'name' => 'addresses',
-							'add' => array(
-								array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'address')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':subject', 'name' => 'subject',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '1', 'regex' => '".*"', 'name' => 'subject')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':mime', 'name' => 'mime')
-					)),
-					array('class' => 'string', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '".*"', 'name' => 'reason')
-					))
-				)
-			);
-			break;
-
-		case 'notify':
-			/* notify [":method" string] [":id" string] [<":low" / ":normal" / ":high">] [":message" string] */
-			$this->s_ = array(
-				'requires' => 'notify',
-				'valid_after' =>$this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':method', 'name' => 'method',
-							'add' => array(
-								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'method')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':id', 'name' => 'id',
-							'add' => array(
-								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'id')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':(low|normal|high)', 'name' => 'priority'),
-						array('occurrences' => '?', 'regex' => ':message', 'name' => 'message',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '1', 'regex' => '".*"', 'name' => 'message')
-								))
-							)
-						)
-					))
-				)
-			);
-			break;
-
-		case 'denotify':
-			/* denotify [match-type: tag  id: string] [<":low" / ":normal" / ":high">] */
-			$this->s_ = array(
-				'requires' => 'notify',
-				'valid_after' =>$this->nonTestCommands_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type',
-							'add' => array(
-								array('class' => 'string', 'list' => false, 'occurrences' => '1', 'values' => array(
-									array('occurrences' => '+', 'regex' => '".*"', 'name' => 'id')
-								))
-							)
-						),
-						array('occurrences' => '?', 'regex' => ':(low|normal|high)', 'name' => 'priority')
-					))
+				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'arguments'   => array(
+					array(
+						'type'       => Token::String,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'address'
+					)
 				)
 			);
 			break;
@@ -263,25 +139,41 @@ class Semantics
 			/* address [address-part: tag] [comparator: tag] [match-type: tag] <header-list: string-list> <key-list: string-list> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
-						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
-						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
-									array('occurrences' => '1', 'regex' => '"i;(octet|ascii-casemap)"', 'name' => 'comparator-string'),
-									array('occurrences' => '1', 'regex' => '"i;ascii-numeric"', 'requires' => 'comparator-i;ascii-numeric', 'name' => 'comparator-string')
-								))
-							)
+				'arguments'   => array(
+					array(
+						'type'       => Token::Tag,
+						'occurrence' => '?',
+						'regex'      => $this->matchTypeRegex_(),
+						'call'       => 'matchTypeHook_',
+						'name'       => 'match type'
+					), array(
+						'type'       => Token::Tag,
+						'occurrence' => '?',
+						'regex'      => $this->addressPartRegex_(),
+						'name'       => 'address part'
+					), array(
+						'type'       => Token::Tag,
+						'occurrence' => '?',
+						'regex'      => ':comparator',
+						'name'       => 'comparator',
+						'value'      => array(
+							'type'       => Token::String,
+							'occurrence' => '1',
+							'call'       => 'comparatorHook_',
+							'regex'      => $this->comparatorRegex_(),
+							'name'       => 'comparator string'
 						)
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'header')
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'key')
-					))
+					), array(
+						'type'       => Token::StringList,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'header'
+					), array(
+						'type'       => Token::StringList,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'key'
+					)
 				)
 			);
 			break;
@@ -292,41 +184,18 @@ class Semantics
 			   anyof <tests: test-list> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'left-parant', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '\(', 'name' => 'test-list')
-					)),
-					array('class' => 'identifier', 'occurrences' => '+', 'values' => array(
-						array('occurrences' => '+', 'regex' => $this->testCommands_, 'name' => 'test')
-					))
-				)
-			);
-			break;
-
-		case 'envelope':
-			/* envelope [address-part: tag] [comparator: tag] [match-type: tag] <envelope-part: string-list> <key-list: string-list> */
-			$this->s_ = array(
-				'requires' => 'envelope',
-				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
-						array('occurrences' => '?', 'regex' => ':(all|localpart|domain|user|detail)', 'call' => 'checkAddrPart_', 'name' => 'address-part'),
-						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
-									array('occurrences' => '1', 'regex' => '"i;(octet|ascii-casemap)"', 'name' => 'comparator-string'),
-									array('occurrences' => '1', 'regex' => '"i;ascii-numeric"', 'requires' => 'comparator-i;ascii-numeric', 'name' => 'comparator-string')
-								))
-							)
-						)
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'envelope-part')
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'key')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::LeftParenthesis,
+						'occurrence' => '1',
+						'regex'      => '\(',
+						'name'       => 'test list'
+					), array(
+						'type'       => Token::Identifier,
+						'occurrence' => '+',
+						'regex'      => $this->testsRegex_(),
+						'name'       => 'test'
+					)
 				)
 			);
 			break;
@@ -335,10 +204,13 @@ class Semantics
 			/* exists <header-names: string-list> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'header')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::StringList,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'header'
+					)
 				)
 			);
 			break;
@@ -347,24 +219,36 @@ class Semantics
 			/* header [comparator: tag] [match-type: tag] <header-names: string-list> <key-list: string-list> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '*', 'post-call' => 'checkTags_', 'values' => array(
-						array('occurrences' => '?', 'regex' => ':(is|contains|matches|count|value|regex)', 'call' => 'setMatchType_', 'name' => 'match-type'),
-						array('occurrences' => '?', 'regex' => ':comparator', 'name' => 'comparator',
-							'add' => array(
-								array('class' => 'string', 'occurrences' => '1', 'call' => 'setComparator_', 'values' => array(
-									array('occurrences' => '1', 'regex' => '"i;(octet|ascii-casemap)"', 'name' => 'comparator-string'),
-									array('occurrences' => '1', 'regex' => '"i;ascii-numeric"', 'requires' => 'comparator-i;ascii-numeric', 'name' => 'comparator-string')
-								))
-							)
+				'arguments'   => array(
+					array(
+						'type'       => Token::Tag,
+						'occurrence' => '?',
+						'regex'      => $this->matchTypeRegex_(),
+						'call'       => 'matchTypeHook_',
+						'name'       => 'match type'
+					), array(
+						'type'       => Token::Tag,
+						'occurrence' => '?',
+						'regex'      => ':comparator',
+						'name'       => 'comparator',
+						'value'      => array(
+							'type'       => Token::String,
+							'occurrence' => '1',
+							'call'       => 'comparatorHook_',
+							'regex'      => $this->comparatorRegex_(),
+							'name'       => 'comparator string'
 						)
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'header')
-					)),
-					array('class' => 'string', 'list' => true, 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '+', 'regex' => '".*"', 'name' => 'key')
-					))
+					), array(
+						'type'       => Token::StringList,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'header'
+					), array(
+						'type'       => Token::StringList,
+						'occurrence' => '1',
+						'regex'      => '".*"',
+						'name'       => 'key'
+					)
 				)
 			);
 			break;
@@ -373,10 +257,13 @@ class Semantics
 			/* not <test> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'identifier', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => $this->testCommands_, 'name' => 'test')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::Identifier,
+						'occurrence' => '1',
+						'regex'      => $this->testsRegex_(),
+						'name'       => 'test'
+					)
 				)
 			);
 			break;
@@ -385,13 +272,18 @@ class Semantics
 			/* size <":over" / ":under"> <limit: number> */
 			$this->s_ = array(
 				'valid_after' => $this->testsValidAfter_,
-				'arguments' => array(
-					array('class' => 'tag', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => ':(over|under)', 'name' => 'size-type')
-					)),
-					array('class' => 'number', 'occurrences' => '1', 'values' => array(
-						array('occurrences' => '1', 'regex' => '.*', 'name' => 'limit')
-					))
+				'arguments'   => array(
+					array(
+						'type'       => Token::Tag,
+						'occurrence' => '1',
+						'regex'      => ':(over|under)',
+						'name'       => 'size type'
+					), array(
+						'type'       => Token::Number,
+						'occurrence' => '1',
+						'regex'      => '.*',
+						'name'       => 'limit'
+					)
 				)
 			);
 			break;
@@ -400,267 +292,503 @@ class Semantics
 		case 'false':
 			/* true / false */
 			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_
+				'valid_after' => $this->testsValidAfter_,
+				'arguments'   => array()
 			);
 			break;
 
-
-		/********************
-		 * unknown commands
-		 */
 		default:
-			$this->unknown = true;
-		}
-	}
-
-	function setExtensionFuncs($setFn, $checkFn)
-	{
-		if (is_callable($setFn) && is_callable($checkFn))
-		{
-			$this->registerExtensionFn_ = $setFn;
-			$this->isExtensionRegisteredFn_ = $checkFn;
-		}
-	}
-
-	function setRequire_($extension)
-	{
-		call_user_func($this->registerExtensionFn_, $extension);
-		return true;
-	}
-
-	function wasRequired_($extension)
-	{
-		return call_user_func($this->isExtensionRegisteredFn_, $extension);
-	}
-
-	function setMatchType_($text)
-	{
-		// Do special processing for relational test extension
-		if ($text == ':count' || $text == ':value')
-		{
-			if (!$this->wasRequired_('relational'))
+			// Check for extension command
+			if ($this->registry_->isCommand($this->command_))
 			{
-				$this->message = 'missing require for match-type '. $text;
-				return false;
+				$xml = $this->registry_->command($this->command_);
+				$this->s_ = array(
+					'valid_after' => $this->commandsRegex_(),
+					'arguments'   => $this->makeArguments_($xml)
+				);
+				break;
 			}
 
-			array_unshift($this->s_['arguments'],
-				array('class' => 'string', 'occurrences' => '1', 'values' => array(
-					array('occurrences' => '1', 'regex' => '"(lt|le|eq|ge|gt|ne)"', 'name' => 'relation-string'),
-				))
-			);
-		}
-		// Do special processing for regex match-type extension
-		else if ($text == ':regex' && !$this->wasRequired_('regex'))
-		{
-			$this->message = 'missing require for match-type '. $text;
-			return false;
-		}
-		$this->matchType_ = $text;
-		return true;
-	}
-
-	function setComparator_($text)
-	{
-		$this->comparator_ = $text;
-		return true;
-	}
-
-	function checkAddrPart_($text)
-	{
-		if ($text == ':user' || $text == ':detail')
-		{
-			if (!$this->wasRequired_('subaddress'))
+			// Check for extension test command
+			if ($this->registry_->isTest($this->command_))
 			{
-				$this->message = 'missing require for tag '. $text;
-				return false;
+				$xml = $this->registry_->test($this->command_);
+				$this->s_ = array(
+					'valid_after' => $this->testsValidAfter_,
+					'arguments'   => $this->makeArguments_($xml)
+				);
+				break;
+			}
+
+			throw new SieveException($token, 'unknown command '. $this->command_);
+		}
+
+		// Check new extension arguments for the command
+		foreach ($this->registry_->arguments($this->command_) as $arguments)
+		{
+			foreach ($arguments->parameter as $p)
+			{
+				switch ((string) $p['type'])
+				{
+				case 'tag':
+					$tag = array(
+						'type'       => Token::Tag,
+						'occurrence' => $this->occurrence_($p),
+						'regex'      => ':'. $this->regex_($p),
+						'name'       => $this->name_($p),
+						'value'      => $this->makeValue_($p->children())
+					);
+
+					if (empty($tag['value']))
+						unset($tag['value']);
+
+					array_unshift($this->s_['arguments'], $tag);
+					break;
+
+				default:
+					trigger_error('not implemented');
+				}
 			}
 		}
-		return true;
-	}
 
-	function checkTags_()
-	{
-		if (isset($this->matchType_) &&
-		    $this->matchType_ == ':count' &&
-		    $this->comparator_ != '"i;ascii-numeric"')
-		{
-			$this->message = 'match-type :count needs comparator i;ascii-numeric';
-			return false;
-		}
-		return true;
-	}
-
-	function validCommand($prev, $line)
-	{
-		// Check if command is known
-		if ($this->unknown)
-		{
-			$this->message = 'line '. $line .': unknown command "'. $this->command_ .'"';
-			return false;
-		}
-
-		// Check if the command needs to be required
-		if (isset($this->s_['requires']) && !$this->wasRequired_($this->s_['requires']))
-		{
-			$this->message = 'line '. $line .': missing require for command "'. $this->command_ .'"';
-			return false;
-		}
-
+//print "command semantics for ".$this->command_."<pre>"; print_r($this->s_); print "</pre>";
 		// Check if command may appear here
-		if (!ereg($this->s_['valid_after'], $prev))
+		if (!preg_match($this->s_['valid_after'], $prevToken->text))
 		{
-			$this->message = 'line '. $line .': "'. $this->command_ .'" may not appear after "'. $prev .'"';
-			return false;
+			// TODO: find a better solution for the script-start mess
+			throw new SieveException($token, $this->command_ .' may not appear after '. $prevToken->text);
 		}
-
-		return true;
 	}
 
-	function validClass_($class, $id)
+	public function __destruct()
+	{
+		$this->registry_->put();
+	}
+
+	// TODO: the *Regex functions could possibly also be static properties
+	protected function requireStringsRegex_()
+	{
+		$extensions = implode('|', $this->registry_->requireStrings());
+		return (empty($extensions) ? '' : "\"($extensions)\"");
+	}
+
+	protected function matchTypeRegex_()
+	{
+		$extensions = implode('|', $this->registry_->matchTypes());
+		return ':('. $this->matchTypes_ . (empty($extensions) ? ')' : "|$extensions)");
+	}
+
+	protected function addressPartRegex_()
+	{
+		$extensions = implode('|', $this->registry_->addressParts());
+		return ':('. $this->addressParts_ . (empty($extensions) ? ')' : "|$extensions)");
+	}
+
+	protected function commandsRegex_()
+	{
+		$extensions = implode('|', $this->registry_->commands());
+		return '('. $this->commands_ . (empty($extensions) ?')' : "|$extensions)");
+	}
+
+	protected function testsRegex_()
+	{
+		$extensions = implode('|', $this->registry_->tests());
+		return '('. $this->tests_ . (empty($extensions) ? ')' : "|$extensions)");
+	}
+
+	protected function comparatorRegex_()
+	{
+		$extensions = implode('|', $this->registry_->comparators());
+		return '"('. $this->comparators_ . (empty($extensions) ? '' : "|$extensions") . ')"';
+	}
+
+	protected function occurrence_($arg)
+	{
+		if (isset($arg['occurrence']))
+		{
+			switch ((string) $arg['occurrence'])
+			{
+			case 'optional':
+				return '?';
+			case 'any':
+				return '*';
+			case 'some':
+				return '+';
+			}
+		}
+		return '1';
+	}
+
+	protected function name_($arg)
+	{
+		if (isset($arg['name']))
+		{
+			return (string) $arg['name'];
+		}
+		return 'undefined';
+	}
+
+	protected function regex_($arg)
+	{
+		if (isset($arg['regex']))
+		{
+			return (string) $arg['regex'];
+		}
+		return '.*';
+	}
+
+	protected function makeValue_($arg)
+	{
+		if (isset($arg->value))
+		{
+			$res = $this->makeArguments_($arg->value);
+			return array_shift($res);
+		}
+		return null;
+	}
+
+	/**
+	 * Convert an extension (test) commands parameters from XML to
+	 * a PHP array the {@see Semantics} class understands.
+	 * @param array(SimpleXMLElement) $parameters
+	 * @return array
+	 */
+	protected function makeArguments_($parameters)
+	{
+		$arguments = array();
+
+//print "<pre>";print_r($parameters);print "</pre>";
+		foreach ($parameters as $arg)
+		{
+			switch ((string) $arg['type'])
+			{
+			case 'matchtype':
+				$tag = array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => $this->matchTypeRegex_(),
+					'call'       => 'matchTypeHook_',
+					'name'       => 'match type',
+					'value'      => $this->makeValue_($arg)
+				);
+
+				if (empty($tag['value']))
+					unset($tag['value']);
+
+				array_push($arguments, $tag);
+				break;
+
+			case 'comparator':
+				array_push($arguments, array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => ':comparator',
+					'name'       => 'comparator',
+					'value'      => array(
+						'type'       => Token::String,
+						'occurrence' => '1',
+						'call'       => 'comparatorHook_',
+						'regex'      => $this->comparatorRegex_(),
+						'name'       => 'comparator string'
+					)
+				));
+				break;
+
+			case 'addresspart':
+				array_push($arguments, array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => $this->addressPartRegex_(),
+					'name'       => 'address part'
+				));
+				break;
+
+			case 'tag':
+				$tag = array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => ':'. $this->regex_($arg),
+					'name'       => $this->name_($arg),
+					'value'      => $this->makeValue_($arg->children())
+				);
+
+				if (empty($tag['value']))
+					unset($tag['value']);
+
+				array_push($arguments, $tag);
+				break;
+
+			case 'number':
+				array_push($arguments, array(
+					'type'       => Token::Number,
+					'occurrence' =>  $this->occurrence_($arg),
+					'regex'      => $this->regex_($arg),
+					'name'       => $this->name_($arg)
+				));
+				break;
+
+			case 'string':
+				array_push($arguments, array(
+					'type'       => Token::String,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => '"'. $this->regex_($arg) .'"',
+					'name'       => $this->name_($arg)
+				));
+				break;
+
+			case 'stringlist':
+				array_push($arguments, array(
+					'type'       => Token::StringList,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => '"'. $this->regex_($arg) .'"',
+					'name'       => $this->name_($arg)
+				));
+				break;
+			}
+		}
+
+		return $arguments;
+	}
+
+	/**
+	 * Add argument that is expected to appear next to the list.
+	 * @param array $value
+	 */
+	protected function addArgument_($value)
+	{
+		if (isset($value))
+		{
+			array_unshift($this->s_['arguments'], $value);
+		}
+	}
+
+	/**
+	 * Add dependency that is expected to be fullfilled when parsing
+	 * of the current command is {@see done}.
+	 * @param array $dependency
+	 */
+	protected function addDependency_($type, $name, $dependencies)
+	{
+		foreach ($dependencies as $d)
+		{
+			array_push($this->deps_, array(
+				'o_type' => $type,
+				'o_name' => $name,
+				'type'   => $d['type'],
+				'name'   => $d['name'],
+				'regex'  => $d['regex']
+			));
+		}
+	}
+
+	protected function invoke_($token, $func, $arg = array())
+	{
+		if (!is_array($arg))
+		{
+			$arg = array($arg);
+		}
+
+		$err = call_user_func_array(array(&$this, $func), $arg);
+
+		if ($err)
+		{
+			throw new SieveException($token, $err);
+		}
+	}
+
+	protected function setRequire_($extension)
+	{
+		$extension = str_replace('"', '', $extension);
+		array_push(self::$requiredExtensions_, $extension);
+		$this->registry_->activate($extension);
+	}
+
+	/**
+	 * Hook function that is called after a address part match was found
+	 * in a command. The kind of address part is remembered in case it's
+	 * needed later {@see done}. For address parts from a extension
+	 * dependency information and valid values are looked up as well.
+	 * @param string $addresspart
+	 */
+	protected function addressPartHook_($addresspart)
+	{
+		$this->addressPart_ = substr($addresspart, 1);
+		$xml = $this->registry_->addresspart($this->addressPart_);
+
+		if (isset($xml))
+		{
+			// Add possible value and depedency
+			$this->addArgument_($this->makeValue_($xml));
+			$this->addDependency_('address part', $this->addressPart_, $xml->requires);
+		}
+	}
+
+	/**
+	 * Hook function that is called after a match type was found in a
+	 * command. The kind of match type is remembered in case it's
+	 * needed later {@see done}. For a match type from extensions
+	 * dependency information and valid values are looked up as well.
+	 * @param string $matchtype
+	 */
+	protected function matchTypeHook_($matchtype)
+	{
+		$this->matchType_ = substr($matchtype, 1);
+		$xml = $this->registry_->matchtype($this->matchType_);
+
+		if (isset($xml))
+		{
+			// Add possible value and depedency
+			$this->addArgument_($this->makeValue_($xml));
+			$this->addDependency_('match type', $this->matchType_, $xml->requires);
+		}
+	}
+
+	/**
+	 * Hook function that is called after a comparator was found in
+	 * a command. The comparator is remembered in case it's needed for
+	 * comparsion later {@see done}. For a comparator from extensions
+	 * dependency infomation is looked up as well.
+	 * @param string $comparator
+	 */
+	protected function comparatorHook_($comparator)
+	{
+		$this->comparator_ = substr($comparator, 1, -1);
+		$xml = $this->registry_->comparator($this->comparator_);
+
+		if (isset($xml))
+		{
+			// Add possible dependency
+			$this->addDependency_('comparator', $this->comparator_, $xml->requires);
+		}
+	}
+
+	protected function validType_($token)
 	{
 		// Check if command expects any arguments
-		if (!isset($this->s_['arguments']))
+		if (empty($this->s_['arguments']))
 		{
-			$this->message = $id .' where semicolon expected';
-			return false;
+			throw new SieveException($token, Token::Semicolon);
 		}
 
+//print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 		foreach ($this->s_['arguments'] as $arg)
 		{
-			if ($class == $arg['class'])
+			if ($arg['occurrence'] == '0')
 			{
-				return true;
+				array_shift($this->s_['arguments']);
+				continue;
+			}
+
+//print "<pre>"; print_r($arg); print "</pre>";
+			if ($token->is($arg['type']))
+			{
+				return;
 			}
 
 			// Is the argument required
-			if ($arg['occurrences'] != '?' && $arg['occurrences'] != '*')
+			if ($arg['occurrence'] != '?' && $arg['occurrence'] != '*')
 			{
-				$this->message = $id .' where '. $arg['class'] .' expected';
-				return false;
+print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
+				throw new SieveException($token, $arg['type']);
 			}
 
-			if (isset($arg['post-call']) &&
-				!call_user_func(array(&$this, $arg['post-call'])))
-			{
-				return false;
-			}
 			array_shift($this->s_['arguments']);
 		}
 
-		$this->message = 'unexpected '. $id;
-		return false;
+//print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
+		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
 	}
 
-	function startStringList($line)
+	public function startStringList($token)
 	{
-		if (!$this->validClass_('string', 'string'))
-		{
-			$this->message = 'line '. $line .': '. $this->message;
-			return false;
-		}
-		else if (!isset($this->s_['arguments'][0]['list']))
-		{
-			$this->message = 'line '. $line .': '. 'left bracket where '. $this->s_['arguments'][0]['class'] .' expected';
-			return false;
-		}
-
-		$this->s_['arguments'][0]['occurrences'] = '+';
-		return true;
+		$this->validType_($token);
+		$this->s_['arguments'][0]['occurrence'] = '+';
 	}
 
-	function endStringList()
+	public function endStringList()
 	{
 		array_shift($this->s_['arguments']);
 	}
 
-	function validToken($class, &$text, &$line)
+	public function validateToken($token)
 	{
-		$name = $class . ($class != $text ? " $text" : '');
+		// Make sure the argument has a valid type
+		$this->validType_($token);
 
-		// Make sure the argument has a valid class
-		if (!$this->validClass_($class, $name))
+		foreach ($this->s_['arguments'] as &$arg)
 		{
-			$this->message = 'line '. $line .': '. $this->message;
-			return false;
-		}
-
-		$arg = &$this->s_['arguments'][0];
-		foreach ($arg['values'] as $val)
-		{
-			if (preg_match('/^'. $val['regex'] .'$/m', $text))
+//print "token: $token->text <pre>"; print_r($this->s_); print "</pre>";
+			if (preg_match('/^'. $arg['regex'] .'$/m', $token->text))
 			{
-				// Check if the argument value needs a 'require'
-				if (isset($val['requires']) && !$this->wasRequired_($val['requires']))
+				// Call extra processing function if defined
+				if (isset($arg['call']))
 				{
-					$this->message = 'line '. $line .': missing require for '. $val['name'] .' '. $text;
-					return false;
+					$this->invoke_($token, $arg['call'], $token->text);
+				}
+
+				// Add argument expected to follow right after this one
+				if (isset($arg['value']))
+				{
+					$this->addArgument_($arg['value']);
 				}
 
 				// Check if a possible value of this argument may occur
-				if ($val['occurrences'] == '?' || $val['occurrences'] == '1')
+				if ($arg['occurrence'] == '?' || $arg['occurrence'] == '1')
 				{
-					$val['occurrences'] = '0';
+					$arg['occurrence'] = '0';
 				}
-				else if ($val['occurrences'] == '+')
+				else if ($arg['occurrence'] == '+')
 				{
-					$val['occurrences'] = '*';
+					$arg['occurrence'] = '*';
 				}
-				else if ($val['occurrences'] == '0')
-				{
-					$this->message = 'line '. $line .': too many '. $val['name'] .' '. $class .'s near '. $text;
-					return false;
-				}
+//print "after: $token->text <pre>"; print_r($this->s_); print "</pre>";
 
-				// Call extra processing function if defined
-				if (isset($val['call']) && !call_user_func(array(&$this, $val['call']), $text) ||
-					isset($arg['call']) && !call_user_func(array(&$this, $arg['call']), $text))
-				{
-					$this->message = 'line '. $line .': '. $this->message;
-					return false;
-				}
+				return;
+			}
 
-				// Set occurrences appropriately
-				if ($arg['occurrences'] == '?' || $arg['occurrences'] == '1')
-				{
-					array_shift($this->s_['arguments']);
-				}
-				else
-				{
-					$arg['occurrences'] = '*';
-				}
-
-				// Add argument(s) expected to follow right after this one
-				if (isset($val['add']))
-				{
-					while ($add_arg = array_pop($val['add']))
-					{
-						array_unshift($this->s_['arguments'], $add_arg);
-					}
-				}
-
-				return true;
+			if ($token->is($arg['type']) && $arg['occurrence'] == 1)
+			{
+				throw new SieveException($token,
+					Token::typeString($token->type) ." $token->text where ". $arg['name'] .' expected');
 			}
 		}
 
-		$this->message = 'line '. $line .': unexpected '. $name;
-		return false;
+		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
 	}
 
-	function done($class, $text, $line)
+	public function done($token)
 	{
-		if (isset($this->s_['arguments']))
+		foreach ($this->s_['arguments'] as $arg)
 		{
-			foreach ($this->s_['arguments'] as $arg)
+			if ($arg['occurrence'] == '+' || $arg['occurrence'] == '1')
 			{
-				if ($arg['occurrences'] == '+' || $arg['occurrences'] == '1')
-				{
-					$this->message = 'line '. $line .': '. $class .' '. $text .' where '. $arg['class'] .' expected';
-					return false;
-				}
+				throw new SieveException($token, $arg['type']);
 			}
 		}
-		return true;
+
+		foreach ($this->deps_ as $d)
+		{
+			switch ($d['type'])
+			{
+			case 'addresspart':
+				$value = $this->addressPart_;
+				break;
+
+			case 'matchtype':
+				$value = $this->matchType_;
+				break;
+
+			case 'comparator':
+				$value = $this->comparator_;
+				break;
+			}
+
+			if (!preg_match('/^'. $d['regex'] .'$/m', $value))
+			{
+				throw new SieveException($token,
+					$d['o_type'] .' '. $d['o_name'] .' needs '. $d['type'] .' '. $d['name']);
+			}
+		}
 	}
 }
 
