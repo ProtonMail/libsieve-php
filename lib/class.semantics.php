@@ -351,7 +351,6 @@ class Semantics
 			}
 		}
 
-//print "command semantics for ".$this->command_."<pre>"; print_r($this->s_); print "</pre>";
 		// Check if command may appear here
 		if (!preg_match($this->s_['valid_after'], $prevToken->text))
 		{
@@ -457,7 +456,6 @@ class Semantics
 	{
 		$arguments = array();
 
-//print "<pre>";print_r($parameters);print "</pre>";
 		foreach ($parameters as $arg)
 		{
 			switch ((string) $arg['type'])
@@ -670,7 +668,6 @@ class Semantics
 			throw new SieveException($token, Token::Semicolon);
 		}
 
-//print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 		foreach ($this->s_['arguments'] as $arg)
 		{
 			if ($arg['occurrence'] == '0')
@@ -679,7 +676,6 @@ class Semantics
 				continue;
 			}
 
-//print "<pre>"; print_r($arg); print "</pre>";
 			if ($token->is($arg['type']))
 			{
 				return;
@@ -688,14 +684,12 @@ class Semantics
 			// Is the argument required
 			if ($arg['occurrence'] != '?' && $arg['occurrence'] != '*')
 			{
-print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 				throw new SieveException($token, $arg['type']);
 			}
 
 			array_shift($this->s_['arguments']);
 		}
 
-//print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
 	}
 
@@ -717,7 +711,6 @@ print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 
 		foreach ($this->s_['arguments'] as &$arg)
 		{
-//print "token: $token->text <pre>"; print_r($this->s_); print "</pre>";
 			if (preg_match('/^'. $arg['regex'] .'$/m', $token->text))
 			{
 				// Call extra processing function if defined
@@ -741,7 +734,6 @@ print "<pre>"; print_r($this->s_['arguments']); print "</pre>";
 				{
 					$arg['occurrence'] = '*';
 				}
-//print "after: $token->text <pre>"; print_r($this->s_); print "</pre>";
 
 				return;
 			}
