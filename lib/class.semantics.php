@@ -23,7 +23,7 @@ class Semantics
 	public function __construct($token, $prevToken)
 	{
 		$this->registry_ = ExtensionRegistry::get();
-		$this->command_ = $token->text;
+		$this->command_ = strtolower($token->text);
 
 		switch ($this->command_)
 		{
@@ -352,7 +352,7 @@ class Semantics
 		}
 
 		// Check if command may appear here
-		if (!preg_match($this->s_['valid_after'], $prevToken->text))
+		if (!preg_match('/'. $this->s_['valid_after'] .'/i', $prevToken->text))
 		{
 			// TODO: find a better solution for the script-start mess
 			throw new SieveException($token, $this->command_ .' may not appear after '. $prevToken->text);
@@ -711,12 +711,13 @@ class Semantics
 
 		foreach ($this->s_['arguments'] as &$arg)
 		{
-			if (preg_match('/^'. $arg['regex'] .'$/m', $token->text))
+			$modifier = ($token->is(Token::String) ? 'm' : 'mi');
+			if (preg_match('/^'. $arg['regex'] .'$/'. $modifier, $token->text))
 			{
 				// Call extra processing function if defined
 				if (isset($arg['call']))
 				{
-					$this->invoke_($token, $arg['call'], $token->text);
+					$this->invoke_($token, $arg['call'], strtolower($token->text));
 				}
 
 				// Add argument expected to follow right after this one
@@ -775,7 +776,7 @@ class Semantics
 				break;
 			}
 
-			if (!preg_match('/^'. $d['regex'] .'$/m', $value))
+			if (!preg_match('/^'. $d['regex'] .'$/mi', $value))
 			{
 				throw new SieveException($token,
 					$d['o_type'] .' '. $d['o_name'] .' needs '. $d['type'] .' '. $d['name']);
