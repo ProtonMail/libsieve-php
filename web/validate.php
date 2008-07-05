@@ -20,12 +20,23 @@ require_once 'lib/libsieve.php';
 if (isset($_POST['script'])) {
 	print stripslashes($_POST['script']);
 
-	$parser = new Parser();
-	$ret = $parser->parse(stripslashes($_POST['script']));
+	$text_color = 'green';
+	$text = 'success';
 
-	print '</pre><hr size="1"/>Result: <span style="color:'. ($ret ? 'green': 'tomato') .';font-weight:bold">' . htmlentities($parser->status_text) ."</span>\n";
+	try
+	{
+		$parser = new Parser();
+		$parser->parse(stripslashes($_POST['script']));
+	}
+	catch (Exception $e)
+	{
+		$text_color = 'tomato';
+		$text = htmlentities($e->getMessage());
+	}
+
+	print '</pre><hr size="1"/>Result: <span style="color:'. $text_color .';font-weight:bold">' . $text ."</span>\n";
 	print '<hr size="1"/><pre style="font-size:x-small">';
-	print htmlentities($parser->tree_->dump());
+	print htmlentities($parser->dumpParseTree());
 }
 else {
 	print "No script to validate.";

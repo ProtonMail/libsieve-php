@@ -11,10 +11,10 @@
 	<h1 style="text-align:center">Welcome to this lousy page</h1>
 	<p style="text-align:justify">
 		<span style="font-family:monospace">libsieve-php</span> is aiming at being a Sieve
-		[<a href="http://tools.ietf.org/html/rfc3028" target="_top">RFC 3028</a>]
-		mail filtering language library. Once finished you'll be able to manage sieve scripts with it. It currently consists
-		of a Sieve script parser that supports some extensions (mostly the ones Cyrus IMAPd supports, since the author wants
-		to use it with his mailserver).
+		[<a href="http://tools.ietf.org/html/rfc5228" target="_top">RFC 5228</a>]
+		mail filtering language library. It is written in PHP5.
+		Once finished you'll be able to manage sieve scripts with it. It currently consists
+		of a Sieve script parser that supports some extensions.
 	</p>
 	<p style="text-align:justify">
 		Next step will be to implement
@@ -30,7 +30,8 @@
 	<p style="text-align:justify">
 		Hack in a Sieve script in the textarea below and try the sieve parser of libsieve-php in action.
 		Note that currently the <span style="font-family:monospace">base spec</span> and the extensions
-		<span style="font-family:monospace">vacation, subaddress, relational, regex, imapflags, copy</span>
+		<span style="font-family:monospace">fileinto, envelope, reject, vacation, subaddress, relational,
+		regex, imapflags (draft-03), imap4flags, copy, spamtest, virustest, ereject</span>
 		and <span style="font-family:monospace">notify</span> are supported by the parser. If you find any
 		bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185" target="_top">report
 		them via the projects bug tracker</a>. I'm especially happy for reports on malformed scripts getting
@@ -39,10 +40,27 @@
 	
 	<form action="validate.php" method="post">
 		<p style="text-align:center">
-			<textarea name="script" cols="80" rows="25">require "fileinto";
-if address :localpart ["To", "CC", "BCC"] ["heiko"] {
-    fileinto "INBOX.personal";
-}</textarea>
+			<textarea name="script" cols="80" rows="25">require ["fileinto"];
+
+if header :is "Sender" "owner-ietf-mta-filters@imc.org"
+        {
+        fileinto "filter"; # move to "filter" mailbox
+        }
+elsif address :DOMAIN :is ["From", "To"] "example.com"
+        {
+        keep;                # keep in "In" mailbox
+        }
+elsif anyof (NOT address :all :contains
+                ["To", "Cc", "Bcc"] "me@example.com",
+              header :matches "subject"
+                ["*make*money*fast*", "*university*dipl*mas*"])
+        {
+        fileinto "spam";    # move to "spam" mailbox
+        }
+else
+        {
+        fileinto "personal";
+        }</textarea>
 			<input type="submit" value="Validate Sieve Script" />
 		</p>
 	</form>
