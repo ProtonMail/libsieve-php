@@ -124,7 +124,7 @@ class Semantics
 					array(
 						'type'       => Token::String,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'address'
 					)
 				)
@@ -154,7 +154,7 @@ class Semantics
 					), array(
 						'type'       => Token::Tag,
 						'occurrence' => '?',
-						'regex'      => ':comparator',
+						'regex'      => 'comparator',
 						'name'       => 'comparator',
 						'value'      => array(
 							'type'       => Token::String,
@@ -166,12 +166,12 @@ class Semantics
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'header'
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'key'
 					)
 				)
@@ -208,7 +208,7 @@ class Semantics
 					array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'header'
 					)
 				)
@@ -229,7 +229,7 @@ class Semantics
 					), array(
 						'type'       => Token::Tag,
 						'occurrence' => '?',
-						'regex'      => ':comparator',
+						'regex'      => 'comparator',
 						'name'       => 'comparator',
 						'value'      => array(
 							'type'       => Token::String,
@@ -241,12 +241,12 @@ class Semantics
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'header'
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
-						'regex'      => '".*"',
+						'regex'      => '.*',
 						'name'       => 'key'
 					)
 				)
@@ -276,7 +276,7 @@ class Semantics
 					array(
 						'type'       => Token::Tag,
 						'occurrence' => '1',
-						'regex'      => ':(over|under)',
+						'regex'      => '(over|under)',
 						'name'       => 'size type'
 					), array(
 						'type'       => Token::Number,
@@ -334,7 +334,7 @@ class Semantics
 					$tag = array(
 						'type'       => Token::Tag,
 						'occurrence' => $this->occurrence_($p),
-						'regex'      => ':'. $this->regex_($p),
+						'regex'      => $this->regex_($p),
 						'name'       => $this->name_($p),
 						'value'      => $this->makeValue_($p->children())
 					);
@@ -368,19 +368,19 @@ class Semantics
 	protected function requireStringsRegex_()
 	{
 		$extensions = implode('|', $this->registry_->requireStrings());
-		return '"(comparator-'. $this->comparators_ .(empty($extensions) ? '' : "|$extensions"). ')"';
+		return '(comparator-'. $this->comparators_ .(empty($extensions) ? '' : "|$extensions"). ')';
 	}
 
 	protected function matchTypeRegex_()
 	{
 		$extensions = implode('|', $this->registry_->matchTypes());
-		return ':('. $this->matchTypes_ . (empty($extensions) ? ')' : "|$extensions)");
+		return '('. $this->matchTypes_ . (empty($extensions) ? ')' : "|$extensions)");
 	}
 
 	protected function addressPartRegex_()
 	{
 		$extensions = implode('|', $this->registry_->addressParts());
-		return ':('. $this->addressParts_ . (empty($extensions) ? ')' : "|$extensions)");
+		return '('. $this->addressParts_ . (empty($extensions) ? ')' : "|$extensions)");
 	}
 
 	protected function commandsRegex_()
@@ -398,7 +398,7 @@ class Semantics
 	protected function comparatorRegex_()
 	{
 		$extensions = implode('|', $this->registry_->comparators());
-		return '"('. $this->comparators_ . (empty($extensions) ? '' : "|$extensions") . ')"';
+		return '('. $this->comparators_ . (empty($extensions) ? '' : "|$extensions") . ')';
 	}
 
 	protected function occurrence_($arg)
@@ -480,7 +480,7 @@ class Semantics
 				array_push($arguments, array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => ':comparator',
+					'regex'      => 'comparator',
 					'name'       => 'comparator',
 					'value'      => array(
 						'type'       => Token::String,
@@ -505,7 +505,7 @@ class Semantics
 				$tag = array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => ':'. $this->regex_($arg),
+					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg),
 					'value'      => $this->makeValue_($arg->children())
 				);
@@ -519,7 +519,7 @@ class Semantics
 			case 'number':
 				array_push($arguments, array(
 					'type'       => Token::Number,
-					'occurrence' =>  $this->occurrence_($arg),
+					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg)
 				));
@@ -529,7 +529,7 @@ class Semantics
 				array_push($arguments, array(
 					'type'       => Token::String,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => '"'. $this->regex_($arg) .'"',
+					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg)
 				));
 				break;
@@ -538,7 +538,7 @@ class Semantics
 				array_push($arguments, array(
 					'type'       => Token::StringList,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => '"'. $this->regex_($arg) .'"',
+					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg)
 				));
 				break;
@@ -662,12 +662,6 @@ class Semantics
 
 	protected function validType_($token)
 	{
-		// Check if command expects any arguments
-		if (empty($this->s_['arguments']))
-		{
-			throw new SieveException($token, Token::Semicolon);
-		}
-
 		foreach ($this->s_['arguments'] as $arg)
 		{
 			if ($arg['occurrence'] == '0')
@@ -688,6 +682,12 @@ class Semantics
 			}
 
 			array_shift($this->s_['arguments']);
+		}
+
+		// Check if command expects any (more) arguments
+		if (empty($this->s_['arguments']))
+		{
+			throw new SieveException($token, Token::Semicolon);
 		}
 
 		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
@@ -711,8 +711,21 @@ class Semantics
 
 		foreach ($this->s_['arguments'] as &$arg)
 		{
-			$modifier = ($token->is(Token::String) ? 's' : 'si');
-			if (preg_match('/^'. $arg['regex'] .'$/'. $modifier, $token->text))
+			// Build regular expression according to argument type
+			switch ( $arg['type'] )
+			{
+			case Token::String:
+			case Token::StringList:
+				$regex = '/^(text:[^\n]*\n'. $arg['regex'] .'\.\r?\n?|"'. $arg['regex'] .'")$/s';
+				break;
+			case Token::Tag:
+				$regex = '/^:'. $arg['regex'] .'$/si';
+				break;
+			default:
+				$regex = '/^'. $arg['regex'] .'$/si';
+			}
+
+			if (preg_match($regex, $token->text))
 			{
 				// Call extra processing function if defined
 				if (isset($arg['call']))
