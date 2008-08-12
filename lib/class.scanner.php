@@ -109,8 +109,8 @@ class Scanner
 		Token::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
 		Token::QuotedString      =>  '"(?:\\[\\"]|[^\x00"])*"',
 		Token::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
-		Token::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?\n)',
-		Token::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.]*\r?\n)*\.\r?\n',
+		Token::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
+		Token::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.]*\r?\n)*\.\r?(\n|$)',
 		Token::Identifier        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
 		Token::Unknown           =>  '[^ \r\n\t]+'
 	);
