@@ -711,7 +711,7 @@ class Semantics
 
 		foreach ($this->s_['arguments'] as &$arg)
 		{
-			$modifier = ($token->is(Token::String) ? 'm' : 'mi');
+			$modifier = ($token->is(Token::String) ? 's' : 'si');
 			if (preg_match('/^'. $arg['regex'] .'$/'. $modifier, $token->text))
 			{
 				// Call extra processing function if defined
