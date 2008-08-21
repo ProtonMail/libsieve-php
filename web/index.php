@@ -17,8 +17,7 @@
 		of a Sieve script parser that supports some extensions.
 	</p>
 	<p style="text-align:justify">
-		Next step will be to implement
-		writing support into the parser so that it can write out the scripts it read. Then there will be added support for the
+		Next step will be to implement support for the
 		<a href="http://tools.ietf.org/html/draft-martin-managesieve" target="_top">MANAGESIEVE</a> protocol which will allow you to download
 		scripts from, upload them to and manage them on a server like timsieved. When all that is done I will hack up some
 		interface classes that will enable you to access and modify parsed scripts without the knowledge of the libraries internals.
