@@ -34,7 +34,7 @@ class Semantics
 		case 'require':
 			/* require <capabilities: string-list> */
 			$this->s_ = array(
-				'valid_after' => '(script-start|require)',
+				'valid_after' => '(_start_|require)',
 				'arguments'   => array(
 					array(
 						'occurrence' => '1',
@@ -50,7 +50,7 @@ class Semantics
 		case 'if':
 			/* if <test> <block> */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
 				'arguments'   => array(
 					array(
 						'type'       => Token::Identifier,
@@ -111,7 +111,7 @@ class Semantics
 		case 'stop':
 			/* discard / keep / stop */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
 				'arguments'   => array()
 			);
 			break;
@@ -119,7 +119,7 @@ class Semantics
 		case 'redirect':
 			/* redirect <address: string> */
 			$this->s_ = array(
-				'valid_after' => str_replace('(', '(script-start|', $this->commandsRegex_()),
+				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
 				'arguments'   => array(
 					array(
 						'type'       => Token::String,
@@ -352,11 +352,9 @@ class Semantics
 		}
 
 		// Check if command may appear here
-		if (!preg_match('/'. $this->s_['valid_after'] .'/i', $prevToken->text))
-		{
-			// TODO: find a better solution for the script-start mess
-			throw new SieveException($token, $this->command_ .' may not appear after '. $prevToken->text);
-		}
+		$prev_text = (is_null($prevToken) ? '_start_' : $prevToken->text);
+		if (!preg_match('/'. $this->s_['valid_after'] .'/i', $prev_text))
+			throw new SieveException($token, $this->command_ .' may not appear after '. $prev_text);
 	}
 
 	public function __destruct()
