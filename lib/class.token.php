@@ -45,6 +45,11 @@ class Token implements Dumpable
 		return '<'. Token::escape($this->text) .'> type:'. Token::typeString($this->type) .' line:'. $this->line;
 	}
 
+	public function text()
+	{
+		return $this->text;
+	}
+
 	public function is($type)
 	{
 		return (bool)($this->type & $type);
