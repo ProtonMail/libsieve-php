@@ -15,9 +15,7 @@ class Parser
 	public function __construct($script = null)
 	{
 		if (isset($script))
-		{
 			$this->parse($script);
-		}
 	}
 
 	public function dumpParseTree()
@@ -25,26 +23,26 @@ class Parser
 		return $this->tree_->dump();
 	}
 
+	public function getScriptText()
+	{
+		return $this->tree_->getText();
+	}
+
 	protected function getPrevToken_($parent_id)
 	{
 		$childs = $this->tree_->getChilds($parent_id);
 
-		for ($i=count($childs); $i>0; --$i)
+		for ($i = count($childs); $i > 0; --$i)
 		{
 			$prev = $this->tree_->getNode($childs[$i-1]);
+			if ($prev->is(Token::Comment|Token::Whitespace))
+				continue;
 
-			if ($prev->type == Token::BlockStart ||
-			    $prev->type == Token::LeftParenthesis ||
-			    $prev->type == Token::Comma)
-			{
-				// use command owning a block or list
+			// use command owning a block or list instead of previous
+			if ($prev->is(Token::BlockStart|Token::Comma|Token::LeftParenthesis))
 				$prev = $this->tree_->getNode($parent_id);
-			}
 
-			if ($prev->type != Token::Comment && $prev->type != Token::Whitespace)
-			{
-				return $prev;
-			}
+			return $prev;
 		}
 
 		return $this->tree_->getNode($parent_id);
@@ -65,16 +63,12 @@ class Parser
 
 		$this->scanner_ = new Scanner($this->script_);
 		$this->scanner_->setPassthroughFunc(array($this, 'commentOrWhitespace_'));
-		$this->tree_ = new Tree($this->scanner_->nextToken(), 'parse tree');
+		$this->tree_ = new Tree('parse tree');
 
-		$this->commands_($this->tree_->root());
+		$this->commands_($this->tree_->getRoot());
 
-		$token = $this->scanner_->nextToken();
-		if (!$token->is(Token::ScriptEnd))
-		{
+		if (!$this->scanner_->nextTokenIs(Token::ScriptEnd))
 			throw new SieveException($token, Token::ScriptEnd);
-		}
-		$this->tree_->addChildTo($this->tree_->root(), $token);
 	}
 
 	protected function commands_($parent_id)
@@ -95,12 +89,12 @@ class Parser
 			$this->arguments_($this_node, $semantics);
 
 			$token = $this->scanner_->nextToken();
-			if ($token->type != Token::Semicolon)
+			if (!$token->is(Token::Semicolon))
 			{
 				// TODO: check if/when semcheck is needed here
 				$semantics->validateToken($token);
 
-				if ($token->type == Token::BlockStart)
+				if ($token->is(Token::BlockStart))
 				{
 					$this->tree_->addChildTo($this_node, $token);
 					$this->block_($this_node, $semantics);
