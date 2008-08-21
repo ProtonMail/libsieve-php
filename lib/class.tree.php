@@ -5,42 +5,35 @@ class Tree
 	protected $childs_;
 	protected $parents_;
 	protected $nodes_;
-	protected $maxId_;
-	protected $dumpFn_;
+	protected $max_id_;
 	protected $dump_;
-	protected $name_;
 
-	public function __construct(Dumpable $root, $name = null)
+	public function __construct($name = 'tree')
 	{
 		$this->childs_ = array();
 		$this->parents_ = array();
 		$this->nodes_ = array();
-		$this->maxId_ = 0;
-		$this->name_ = $name;
+		$this->max_id_ = 0;
 
 		$this->parents_[0] = null;
-		$this->nodes_[0] = $root;
+		$this->nodes_[0] = $name;
 	}
 
 	public function addChild(Dumpable $child)
 	{
-		return $this->addChildTo($this->maxId_, $child);
+		return $this->addChildTo($this->max_id_, $child);
 	}
 
 	public function addChildTo($parent_id, Dumpable $child)
 	{
-		if (!is_int($parent_id) ||
-		    !isset($this->nodes_[$parent_id]))
-		{
+		if (!is_int($parent_id)
+		 || !isset($this->nodes_[$parent_id]))
 			return null;
-		}
 
 		if (!isset($this->childs_[$parent_id]))
-		{
 			$this->childs_[$parent_id] = array();
-		}
 
-		$child_id = ++$this->maxId_;
+		$child_id = ++$this->max_id_;
 		$this->nodes_[$child_id] = $child;
 		$this->parents_[$child_id] = $parent_id;
 		array_push($this->childs_[$parent_id], $child_id);
@@ -48,86 +41,77 @@ class Tree
 		return $child_id;
 	}
 
-	public function root()
+	public function getRoot()
 	{
-		if (!isset($this->nodes_[0]))
-		{
-			return null;
-		}
-
 		return 0;
-	}
-
-	public function getParent($node_id)
-	{
-		if (!is_int($node_id) ||
-		    !isset($this->nodes_[$node_id]))
-		{
-			return null;
-		}
-
-		return $this->parents_[$node_id];
 	}
 
 	public function getChilds($node_id)
 	{
-		if (!is_int($node_id) ||
-		    !isset($this->nodes_[$node_id]))
-		{
+		if (!is_int($node_id)
+		|| !isset($this->nodes_[$node_id]))
 			return null;
-		}
 
 		if (!isset($this->childs_[$node_id]))
-		{
 			return array();
-		}
 
 		return $this->childs_[$node_id];
 	}
 
 	public function getNode($node_id)
 	{
-		if (!is_int($node_id) ||
-		    !isset($this->nodes_[$node_id]))
-		{
+		if ($node_id == 0 || !is_int($node_id)
+		 || !isset($this->nodes_[$node_id]))
 			return null;
-		}
 
 		return $this->nodes_[$node_id];
 	}
 
 	public function dump()
 	{
-		$this->dump_ = (is_null($this->name_) ? 'tree' : $this->name_) ."\n";
-		$this->doDump_(0, '', true);
+		$this->dump_ = $this->nodes_[$this->getRoot()] ."\n";
+		$this->dumpChilds_($this->getRoot(), ' ');
 		return $this->dump_;
 	}
 
-	protected function doDump_($node_id, $prefix, $last)
+	protected function dumpChilds_($parent_id, $prefix)
 	{
-		if ($last)
+		if (!isset($this->childs_[$parent_id]))
+			return;
+
+		$childs = $this->childs_[$parent_id];
+		$last_child = count($childs);
+
+		for ($i=1; $i <= $last_child; ++$i)
 		{
-			$infix = '`--- ';
-			$child_prefix = $prefix .'   ';
+			$child_node = $this->nodes_[$childs[$i-1]];
+			$infix = ($i == $last_child ? '`--- ' : '|--- ');
+			$this->dump_ .= $prefix . $infix . $child_node->dump() ."\n";
+
+			$next_prefix = $prefix . ($i == $last_child ? '   ' : '|  ');
+			$this->dumpChilds_($childs[$i-1], $next_prefix);
 		}
-		else
+	}
+
+	public function getText()
+	{
+		$this->dump_ = '';
+		$this->childText_($this->getRoot());
+		return $this->dump_;
+	}
+
+	protected function childText_($parent_id)
+	{
+		if (!isset($this->childs_[$parent_id]))
+			return;
+
+		$childs = $this->childs_[$parent_id];
+
+		for ($i = 0; $i < count($childs); ++$i)
 		{
-			$infix = '|--- ';
-			$child_prefix = $prefix .'|  ';
-		}
-
-		$node = $this->nodes_[$node_id];
-		$this->dump_ .= $prefix . $infix . $node->dump() ."\n";
-
-		if (isset($this->childs_[$node_id]))
-		{
-			$childs = $this->childs_[$node_id];
-			$last_child = count($childs);
-
-			for ($i=1; $i <= $last_child; ++$i)
-			{
-				$this->doDump_($childs[$i-1], $child_prefix, ($i == $last_child ? true : false));
-			}
+			$child_node = $this->nodes_[$childs[$i]];
+			$this->dump_ .= $child_node->text();
+			$this->childText_($childs[$i]);
 		}
 	}
 }
