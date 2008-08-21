@@ -27,6 +27,8 @@ catch (Exception $e)
 print "<small><pre>$script</pre><hr>";
 print '<pre style="color:'. $text_color .';font-weight:bold">' . $text .'</pre><hr><pre>';
 print htmlentities($parser->dumpParseTree());
+print '</pre><hr><pre>';
+print $parser->getScriptText();
 print '</pre></small>';
 
 ?>
