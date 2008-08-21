@@ -7,9 +7,7 @@ class Scanner
 	public function __construct(&$script)
 	{
 		if ($script === null)
-		{
 			return;
-		}
 
 		$this->tokenize($script);
 	}
@@ -17,9 +15,7 @@ class Scanner
 	public function setPassthroughFunc($callback)
 	{
 		if ($callback == null || is_callable($callback))
-		{
 			$this->ptFn_ = $callback;
-		}
 	}
 
 	public function tokenize(&$script)
@@ -29,51 +25,38 @@ class Scanner
 
 		$script_length = mb_strlen($script);
 
-		array_push($this->tokens_, new Token(Token::ScriptStart, 'script-start', $line));
-
 		while ($pos < $script_length)
 		{
 			foreach ($this->tokenMatch_ as $type => $regex)
 			{
 				if (preg_match('/^'. $regex .'/', mb_substr($script, $pos), $match))
 				{
-					$length = mb_strlen($match[0]);
-
 					array_push($this->tokens_, new Token($type, $match[0], $line));
 
 					if ($type == Token::Unknown)
-					{
 						return;
-					}
 
-					$pos += $length;
+					$pos += mb_strlen($match[0]);
 					$line += mb_substr_count($match[0], "\n");
 					break;
 				}
 			}
 		}
 
-		array_push($this->tokens_, new Token(Token::ScriptEnd, 'script-end', $line));
+		array_push($this->tokens_, new Token(Token::ScriptEnd, '', $line));
 	}
 
 	public function nextTokenIs($type)
 	{
-		$next = $this->peekNextToken()->type;
-		if (is_array($type))
-		{
-			return in_array($next, $type);
-		}
-		return (bool) ($next & $type);
+		return $this->peekNextToken()->is($type);
 	}
 
 	public function peekNextToken()
 	{
 		$offset = 0;
-		do
-		{
+		do {
 			$next = $this->tokens_[$this->tokenPos_ + $offset++];
-		}
-		while ($next->is(Token::Comment|Token::Whitespace));
+		} while ($next->is(Token::Comment|Token::Whitespace));
 
 		return $next;
 	}
@@ -81,15 +64,15 @@ class Scanner
 	public function nextToken()
 	{
 		$token = $this->tokens_[$this->tokenPos_++];
-		while ($token->type == Token::Comment ||
-		       $token->type == Token::Whitespace)
+
+		while ($token->is(Token::Comment|Token::Whitespace))
 		{
 			if ($this->ptFn_ != null)
-			{
 				call_user_func($this->ptFn_, $token);
-			}
+
 			$token = $this->tokens_[$this->tokenPos_++];
 		}
+
 		return $token;
 	}
 
