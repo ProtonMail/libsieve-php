@@ -156,13 +156,13 @@ class Semantics
 						'occurrence' => '?',
 						'regex'      => 'comparator',
 						'name'       => 'comparator',
-						'value'      => array(
+						'subArgs'    => array( array(
 							'type'       => Token::String,
 							'occurrence' => '1',
 							'call'       => 'comparatorHook_',
 							'regex'      => $this->comparatorRegex_(),
 							'name'       => 'comparator string'
-						)
+						))
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
@@ -231,13 +231,13 @@ class Semantics
 						'occurrence' => '?',
 						'regex'      => 'comparator',
 						'name'       => 'comparator',
-						'value'      => array(
+						'subArgs'    => array( array(
 							'type'       => Token::String,
 							'occurrence' => '1',
 							'call'       => 'comparatorHook_',
 							'regex'      => $this->comparatorRegex_(),
 							'name'       => 'comparator string'
-						)
+						))
 					), array(
 						'type'       => Token::StringList,
 						'occurrence' => '1',
@@ -336,11 +336,8 @@ class Semantics
 						'occurrence' => $this->occurrence_($p),
 						'regex'      => $this->regex_($p),
 						'name'       => $this->name_($p),
-						'value'      => $this->makeValue_($p->children())
+						'subArgs'    => $this->makeArguments_($p->children())
 					);
-
-					if (empty($tag['value']))
-						unset($tag['value']);
 
 					array_unshift($this->s_['arguments'], $tag);
 					break;
@@ -456,22 +453,21 @@ class Semantics
 
 		foreach ($parameters as $arg)
 		{
+			// Ignore anything not a <parameter>
+			if ($arg->getName() != 'parameter')
+				continue;
+
 			switch ((string) $arg['type'])
 			{
 			case 'matchtype':
-				$tag = array(
+				array_push($arguments, array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->matchTypeRegex_(),
 					'call'       => 'matchTypeHook_',
 					'name'       => 'match type',
-					'value'      => $this->makeValue_($arg)
-				);
-
-				if (empty($tag['value']))
-					unset($tag['value']);
-
-				array_push($arguments, $tag);
+					'subArgs'    => $this->makeArguments_($arg)
+				));
 				break;
 
 			case 'comparator':
@@ -480,13 +476,13 @@ class Semantics
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => 'comparator',
 					'name'       => 'comparator',
-					'value'      => array(
+					'subArgs'    => array( array(
 						'type'       => Token::String,
 						'occurrence' => '1',
 						'call'       => 'comparatorHook_',
 						'regex'      => $this->comparatorRegex_(),
 						'name'       => 'comparator string'
-					)
+					))
 				));
 				break;
 
@@ -500,18 +496,13 @@ class Semantics
 				break;
 
 			case 'tag':
-				$tag = array(
+				array_push($arguments, array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg),
-					'value'      => $this->makeValue_($arg->children())
-				);
-
-				if (empty($tag['value']))
-					unset($tag['value']);
-
-				array_push($arguments, $tag);
+					'subArgs'    => $this->makeArguments_($arg->children())
+				));
 				break;
 
 			case 'number':
@@ -547,14 +538,14 @@ class Semantics
 	}
 
 	/**
-	 * Add argument that is expected to appear next to the list.
+	 * Add argument(s) expected / allowed to appear next.
 	 * @param array $value
 	 */
-	protected function addArgument_($value)
+	protected function addArguments_($subArgs)
 	{
-		if (isset($value))
+		for ($i = count($subArgs); $i > 0; $i--)
 		{
-			array_unshift($this->s_['arguments'], $value);
+			array_unshift($this->s_['arguments'], $subArgs[$i-1]);
 		}
 	}
 
@@ -614,7 +605,7 @@ class Semantics
 		if (isset($xml))
 		{
 			// Add possible value and depedency
-			$this->addArgument_($this->makeValue_($xml));
+			$this->addArguments_($this->makeArguments_($xml));
 			$this->addDependency_('address part', $this->addressPart_, $xml->requires);
 		}
 	}
@@ -634,7 +625,7 @@ class Semantics
 		if (isset($xml))
 		{
 			// Add possible value and depedency
-			$this->addArgument_($this->makeValue_($xml));
+			$this->addArguments_($this->makeArguments_($xml));
 			$this->addDependency_('match type', $this->matchType_, $xml->requires);
 		}
 	}
@@ -731,11 +722,9 @@ class Semantics
 					$this->invoke_($token, $arg['call'], strtolower($token->text));
 				}
 
-				// Add argument expected to follow right after this one
-				if (isset($arg['value']))
-				{
-					$this->addArgument_($arg['value']);
-				}
+				// Add argument(s) that may now appear after this one
+				if (isset($arg['subArgs']))
+					$this->addArguments_($arg['subArgs']);
 
 				// Check if a possible value of this argument may occur
 				if ($arg['occurrence'] == '?' || $arg['occurrence'] == '1')
@@ -762,6 +751,7 @@ class Semantics
 
 	public function done($token)
 	{
+		// Check if there are required arguments left
 		foreach ($this->s_['arguments'] as $arg)
 		{
 			if ($arg['occurrence'] == '+' || $arg['occurrence'] == '1')
@@ -770,6 +760,7 @@ class Semantics
 			}
 		}
 
+		// Check if the command depends on use of a certain tag
 		foreach ($this->deps_ as $d)
 		{
 			switch ($d['type'])

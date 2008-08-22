@@ -22,7 +22,7 @@
 
 	<argument extends="(fileinto|keep)">
 		<parameter type="tag" name="flags" regex="flags" occurrence="optional">
-			<value type="stringlist" name="flag list" />
+			<parameter type="stringlist" name="flag list" />
 		</parameter>
 	</argument>
 
