@@ -30,7 +30,7 @@
 		Hack in a Sieve script in the textarea below and try the sieve parser of libsieve-php in action.
 		Note that currently the <span style="font-family:monospace">base spec</span> and the extensions
 		<span style="font-family:monospace">fileinto, envelope, reject, vacation, subaddress, relational,
-		regex, imapflags (draft-03), imap4flags, copy, spamtest, virustest, ereject</span>
+		regex, imapflags (draft-03), imap4flags, copy, spamtest, virustest, ereject, editheader</span>
 		and <span style="font-family:monospace">notify</span> are supported by the parser. If you find any
 		bugs don't hesitate and <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=184171&amp;atid=908185" target="_top">report
 		them via the projects bug tracker</a>. I'm especially happy for reports on malformed scripts getting

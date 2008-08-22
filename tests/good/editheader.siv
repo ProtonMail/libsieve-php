@@ -1,0 +1,10 @@
+require ["editheader"];
+
+if not header :contains "X-Sieve-Filtered"
+        ["<kim@job.example.com>", "<kim@home.example.com>"]
+{
+        addheader :last "X-Sieve-Filtered" "<kim@job.example.com>";
+        redirect "kim@home.example.com";
+}
+
+deleteheader :index 1 :last :contains "Delivered-To" "bob@example.com";
