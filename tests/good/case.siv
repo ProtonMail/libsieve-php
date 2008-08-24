@@ -1,0 +1,3 @@
+Require "vacation";
+
+VaCAtiON :MiMe :SUBJECT "foo" "bar";
