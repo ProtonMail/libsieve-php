@@ -1,6 +1,6 @@
 <?php
 
-class ExtensionRegistry
+class KeywordRegistry
 {
 	protected $registry_ = array();
 	protected $matchTypes_ = array();
@@ -15,6 +15,39 @@ class ExtensionRegistry
 
 	protected function __construct()
 	{
+		$keywords = simplexml_load_file(dirname(__FILE__) .'/keywords.xml');
+		foreach ($keywords->children() as $keyword)
+		{
+			switch ($keyword->getName())
+			{
+			case 'matchtype':
+				$type =& $this->matchTypes_;
+				break;
+			case 'comparator':
+				$type =& $this->comparators_;
+				break;
+			case 'addresspart':
+				$type =& $this->addressParts_;
+				break;
+			case 'test':
+				$type =& $this->tests_;
+				break;
+			case 'command':
+				$type =& $this->commands_;
+				break;
+			default:
+				trigger_error('Unsupported keyword type "'. $keyword->getName()
+					. '" in file "keywords/'. basename($file) .'"');
+				return;
+			}
+
+			$name = (string) $keyword['name'];
+			if (array_key_exists($name, $type))
+				trigger_error("redefinition of $type $name - skipping");
+			else
+				$type[$name] = $keyword->children();
+		}
+
 		foreach (glob(dirname(__FILE__) .'/extensions/*.xml') as $file)
 		{
 			$extension = simplexml_load_file($file);
@@ -32,7 +65,7 @@ class ExtensionRegistry
 	{
 		if (self::$instance == null)
 		{
-			self::$instance = new ExtensionRegistry();
+			self::$instance = new KeywordRegistry();
 		}
 
 		self::$refcount++;

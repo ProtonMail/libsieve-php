@@ -8,338 +8,77 @@ class Semantics
 {
 	protected static $requiredExtensions_ = array();
 
-	protected $command_;
 	protected $comparator_;
 	protected $matchType_;
-	protected $s_;
+	protected $addressPart_;
+	protected $arguments_;
 	protected $deps_ = array();
 	protected $commands_ = 'require|if|elsif|else|redirect|stop|keep|discard';
-	protected $testsValidAfter_ = '(if|elsif|anyof|allof|not)';
-	protected $tests_ = 'address|header|size|allof|anyof|exists|not|true|false';
-	protected $comparators_ = 'i;(octet|ascii-casemap)';
-	protected $addressParts_ = 'all|localpart|domain';
-	protected $matchTypes_ = 'is|contains|matches';
 
 	public function __construct($token, $prevToken)
 	{
-		$this->registry_ = ExtensionRegistry::get();
-		$this->command_ = strtolower($token->text);
+		$this->registry_ = KeywordRegistry::get();
+		$command = strtolower($token->text);
 
-		switch ($this->command_)
+		// Check the registry for $command
+		if ($this->registry_->isCommand($command))
 		{
-
-		/********************
-		 * control commands
-		 */
-		case 'require':
-			/* require <capabilities: string-list> */
-			$this->s_ = array(
-				'valid_after' => '(_start_|require)',
-				'arguments'   => array(
-					array(
-						'occurrence' => '1',
-						'type'       => Token::StringList,
-						'name'       => 'require string',
-						'call'       => 'setRequire_',
-						'regex'      => $this->requireStringsRegex_()
-					)
-				)
-			);
-			break;
-
-		case 'if':
-			/* if <test> <block> */
-			$this->s_ = array(
-				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
-				'arguments'   => array(
-					array(
-						'type'       => Token::Identifier,
-						'occurrence' => '1',
-						'regex'      => $this->testsRegex_(),
-						'name'       => 'test'
-					), array(
-						'type'       => Token::BlockStart,
-						'occurrence' => '1',
-						'regex'      => '{',
-						'name'       => 'block'
-					)
-				)
-			);
-			break;
-
-		case 'elsif':
-			/* elsif <test> <block> */
-			$this->s_ = array(
-				'valid_after' => '(if|elsif)',
-				'arguments'   => array(
-					array(
-						'type'       => Token::Identifier,
-						'occurrence' => '1',
-						'regex'      => $this->testsRegex_(),
-						'name'       => 'test'
-					), array(
-						'type'       => Token::BlockStart,
-						'occurrence' => '1',
-						'regex'      => '{',
-						'name'       => 'block'
-					)
-				)
-			);
-			break;
-
-		case 'else':
-			/* else <block> */
-			$this->s_ = array(
-				'valid_after' => '(if|elsif)',
-				'arguments'   => array(
-					array(
-						'type'       => Token::BlockStart,
-						'occurrence' => '1',
-						'regex'      => '{',
-						'name'       => 'block'
-					)
-				)
-			);
-			break;
-
-
-		/*******************
-		 * action commands
-		 */
-		case 'discard':
-		case 'keep':
-		case 'stop':
-			/* discard / keep / stop */
-			$this->s_ = array(
-				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
-				'arguments'   => array()
-			);
-			break;
-
-		case 'redirect':
-			/* redirect <address: string> */
-			$this->s_ = array(
-				'valid_after' => str_replace('(', '(_start_|', $this->commandsRegex_()),
-				'arguments'   => array(
-					array(
-						'type'       => Token::String,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'address'
-					)
-				)
-			);
-			break;
-
-
-		/*****************
-		 * test commands
-		 */
-		case 'address':
-			/* address [address-part: tag] [comparator: tag] [match-type: tag] <header-list: string-list> <key-list: string-list> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::Tag,
-						'occurrence' => '?',
-						'regex'      => $this->matchTypeRegex_(),
-						'call'       => 'matchTypeHook_',
-						'name'       => 'match type'
-					), array(
-						'type'       => Token::Tag,
-						'occurrence' => '?',
-						'regex'      => $this->addressPartRegex_(),
-						'name'       => 'address part'
-					), array(
-						'type'       => Token::Tag,
-						'occurrence' => '?',
-						'regex'      => 'comparator',
-						'name'       => 'comparator',
-						'subArgs'    => array( array(
-							'type'       => Token::String,
-							'occurrence' => '1',
-							'call'       => 'comparatorHook_',
-							'regex'      => $this->comparatorRegex_(),
-							'name'       => 'comparator string'
-						))
-					), array(
-						'type'       => Token::StringList,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'header'
-					), array(
-						'type'       => Token::StringList,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'key'
-					)
-				)
-			);
-			break;
-
-		case 'allof':
-		case 'anyof':
-			/* allof <tests: test-list>
-			   anyof <tests: test-list> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::LeftParenthesis,
-						'occurrence' => '1',
-						'regex'      => '\(',
-						'name'       => 'test list'
-					), array(
-						'type'       => Token::Identifier,
-						'occurrence' => '+',
-						'regex'      => $this->testsRegex_(),
-						'name'       => 'test'
-					)
-				)
-			);
-			break;
-
-		case 'exists':
-			/* exists <header-names: string-list> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::StringList,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'header'
-					)
-				)
-			);
-			break;
-
-		case 'header':
-			/* header [comparator: tag] [match-type: tag] <header-names: string-list> <key-list: string-list> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::Tag,
-						'occurrence' => '?',
-						'regex'      => $this->matchTypeRegex_(),
-						'call'       => 'matchTypeHook_',
-						'name'       => 'match type'
-					), array(
-						'type'       => Token::Tag,
-						'occurrence' => '?',
-						'regex'      => 'comparator',
-						'name'       => 'comparator',
-						'subArgs'    => array( array(
-							'type'       => Token::String,
-							'occurrence' => '1',
-							'call'       => 'comparatorHook_',
-							'regex'      => $this->comparatorRegex_(),
-							'name'       => 'comparator string'
-						))
-					), array(
-						'type'       => Token::StringList,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'header'
-					), array(
-						'type'       => Token::StringList,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'key'
-					)
-				)
-			);
-			break;
-
-		case 'not':
-			/* not <test> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::Identifier,
-						'occurrence' => '1',
-						'regex'      => $this->testsRegex_(),
-						'name'       => 'test'
-					)
-				)
-			);
-			break;
-
-		case 'size':
-			/* size <":over" / ":under"> <limit: number> */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array(
-					array(
-						'type'       => Token::Tag,
-						'occurrence' => '1',
-						'regex'      => '(over|under)',
-						'name'       => 'size type'
-					), array(
-						'type'       => Token::Number,
-						'occurrence' => '1',
-						'regex'      => '.*',
-						'name'       => 'limit'
-					)
-				)
-			);
-			break;
-
-		case 'true':
-		case 'false':
-			/* true / false */
-			$this->s_ = array(
-				'valid_after' => $this->testsValidAfter_,
-				'arguments'   => array()
-			);
-			break;
-
-		default:
-			// Check for extension command
-			if ($this->registry_->isCommand($this->command_))
-			{
-				$xml = $this->registry_->command($this->command_);
-				$this->s_ = array(
-					'valid_after' => $this->commandsRegex_(),
-					'arguments'   => $this->makeArguments_($xml)
-				);
-				break;
-			}
-
-			// Check for extension test command
-			if ($this->registry_->isTest($this->command_))
-			{
-				$xml = $this->registry_->test($this->command_);
-				$this->s_ = array(
-					'valid_after' => $this->testsValidAfter_,
-					'arguments'   => $this->makeArguments_($xml)
-				);
-				break;
-			}
-
-			throw new SieveException($token, 'unknown command '. $this->command_);
+			$xml = $this->registry_->command($command);
+			$this->arguments_ = $this->makeArguments_($xml);
+		}
+		else if ($this->registry_->isTest($command))
+		{
+			$xml = $this->registry_->test($command);
+			$this->arguments_ = $this->makeArguments_($xml);
+		}
+		else
+		{
+			throw new SieveException($token, 'unknown command '. $command);
 		}
 
-		// Check new extension arguments for the command
-		foreach ($this->registry_->arguments($this->command_) as $arguments)
+		// Check if command may appear at this position within the script
+		if ($this->registry_->isTest($command))
+		{
+			if (is_null($prevToken))
+				throw new SieveException($token, $command .' may not appear as first command');
+			
+			if (!preg_match('/^(if|elsif|anyof|allof|not)$/i', $prevToken->text))
+				throw new SieveException($token, $command .' may not appear after '. $prevToken->text);
+		}
+		else if (isset($prevToken))
+		{
+			switch ($command)
+			{
+			case 'require':
+				$valid_after = 'require';
+				break;
+			case 'elsif':
+			case 'else':
+				$valid_after = '(if|elsif)';
+				break;
+			default:
+				$valid_after = $this->commandsRegex_();
+			}
+			
+			if (!preg_match('/^'. $valid_after .'$/i', $prevToken->text))
+				throw new SieveException($token, $command .' may not appear after '. $prevToken->text);
+		}
+
+		// Check for extension arguments to add to the command
+		foreach ($this->registry_->arguments($command) as $arguments)
 		{
 			foreach ($arguments->parameter as $p)
 			{
 				switch ((string) $p['type'])
 				{
 				case 'tag':
-					$tag = array(
+					array_unshift($this->arguments_, array(
 						'type'       => Token::Tag,
 						'occurrence' => $this->occurrence_($p),
 						'regex'      => $this->regex_($p),
 						'name'       => $this->name_($p),
 						'subArgs'    => $this->makeArguments_($p->children())
-					);
-
-					array_unshift($this->s_['arguments'], $tag);
+					));
 					break;
 
 				default:
@@ -347,11 +86,6 @@ class Semantics
 				}
 			}
 		}
-
-		// Check if command may appear here
-		$prev_text = (is_null($prevToken) ? '_start_' : $prevToken->text);
-		if (!preg_match('/'. $this->s_['valid_after'] .'/i', $prev_text))
-			throw new SieveException($token, $this->command_ .' may not appear after '. $prev_text);
 	}
 
 	public function __destruct()
@@ -362,38 +96,32 @@ class Semantics
 	// TODO: the *Regex functions could possibly also be static properties
 	protected function requireStringsRegex_()
 	{
-		$extensions = implode('|', $this->registry_->requireStrings());
-		return '(comparator-'. $this->comparators_ .(empty($extensions) ? '' : "|$extensions"). ')';
+		return '('. implode('|', $this->registry_->requireStrings()) .')';
 	}
 
 	protected function matchTypeRegex_()
 	{
-		$extensions = implode('|', $this->registry_->matchTypes());
-		return '('. $this->matchTypes_ . (empty($extensions) ? ')' : "|$extensions)");
+		return '('. implode('|', $this->registry_->matchTypes()) .')';
 	}
 
 	protected function addressPartRegex_()
 	{
-		$extensions = implode('|', $this->registry_->addressParts());
-		return '('. $this->addressParts_ . (empty($extensions) ? ')' : "|$extensions)");
+		return '('. implode('|', $this->registry_->addressParts()) .')';
 	}
 
 	protected function commandsRegex_()
 	{
-		$extensions = implode('|', $this->registry_->commands());
-		return '('. $this->commands_ . (empty($extensions) ?')' : "|$extensions)");
+		return '('. implode('|', $this->registry_->commands()) .')';
 	}
 
 	protected function testsRegex_()
 	{
-		$extensions = implode('|', $this->registry_->tests());
-		return '('. $this->tests_ . (empty($extensions) ? ')' : "|$extensions)");
+		return '('. implode('|', $this->registry_->tests()) .')';
 	}
 
 	protected function comparatorRegex_()
 	{
-		$extensions = implode('|', $this->registry_->comparators());
-		return '('. $this->comparators_ . (empty($extensions) ? '' : "|$extensions") . ')';
+		return '('. implode('|', $this->registry_->comparators()) .')';
 	}
 
 	protected function occurrence_($arg)
@@ -459,13 +187,22 @@ class Semantics
 
 			switch ((string) $arg['type'])
 			{
-			case 'matchtype':
+			case 'addresspart':
 				array_push($arguments, array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => $this->matchTypeRegex_(),
-					'call'       => 'matchTypeHook_',
-					'name'       => 'match type',
+					'regex'      => $this->addressPartRegex_(),
+					'call'       => 'addressPartHook_',
+					'name'       => 'address part'
+				));
+				break;
+
+			case 'block':
+				array_push($arguments, array(
+					'type'       => Token::BlockStart,
+					'occurrence' => '1',
+					'regex'      => '{',
+					'name'       => 'block',
 					'subArgs'    => $this->makeArguments_($arg)
 				));
 				break;
@@ -486,22 +223,14 @@ class Semantics
 				));
 				break;
 
-			case 'addresspart':
+			case 'matchtype':
 				array_push($arguments, array(
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
-					'regex'      => $this->addressPartRegex_(),
-					'name'       => 'address part'
-				));
-				break;
-
-			case 'tag':
-				array_push($arguments, array(
-					'type'       => Token::Tag,
-					'occurrence' => $this->occurrence_($arg),
-					'regex'      => $this->regex_($arg),
-					'name'       => $this->name_($arg),
-					'subArgs'    => $this->makeArguments_($arg->children())
+					'regex'      => $this->matchTypeRegex_(),
+					'call'       => 'matchTypeHook_',
+					'name'       => 'match type',
+					'subArgs'    => $this->makeArguments_($arg)
 				));
 				break;
 
@@ -510,6 +239,16 @@ class Semantics
 					'type'       => Token::Number,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
+					'name'       => $this->name_($arg)
+				));
+				break;
+
+			case 'requirestrings':
+				array_push($arguments, array(
+					'type'       => Token::StringList,
+					'occurrence' => $this->occurrence_($arg),
+					'call'       => 'setRequire_',
+					'regex'      => $this->requireStringsRegex_(),
 					'name'       => $this->name_($arg)
 				));
 				break;
@@ -531,6 +270,43 @@ class Semantics
 					'name'       => $this->name_($arg)
 				));
 				break;
+
+			case 'tag':
+				array_push($arguments, array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => $this->regex_($arg),
+					'name'       => $this->name_($arg),
+					'subArgs'    => $this->makeArguments_($arg->children())
+				));
+				break;
+
+			case 'test':
+				array_push($arguments, array(
+					'type'       => Token::Identifier,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => $this->testsRegex_(),
+					'name'       => $this->name_($arg),
+					'subArgs'    => $this->makeArguments_($arg->children())
+				));
+				break;
+
+			case 'testlist':
+				array_push($arguments, array(
+					'type'       => Token::LeftParenthesis,
+					'occurrence' => '1',
+					'regex'      => '\(',
+					'name'       => $this->name_($arg),
+					'subArgs'    => null
+				));
+				array_push($arguments, array(
+					'type'       => Token::Identifier,
+					'occurrence' => '+',
+					'regex'      => $this->testsRegex_(),
+					'name'       => $this->name_($arg),
+					'subArgs'    => $this->makeArguments_($arg->children())
+				));
+				break;
 			}
 		}
 
@@ -545,7 +321,7 @@ class Semantics
 	{
 		for ($i = count($subArgs); $i > 0; $i--)
 		{
-			array_unshift($this->s_['arguments'], $subArgs[$i-1]);
+			array_unshift($this->arguments_, $subArgs[$i-1]);
 		}
 	}
 
@@ -651,11 +427,11 @@ class Semantics
 
 	protected function validType_($token)
 	{
-		foreach ($this->s_['arguments'] as $arg)
+		foreach ($this->arguments_ as $arg)
 		{
 			if ($arg['occurrence'] == '0')
 			{
-				array_shift($this->s_['arguments']);
+				array_shift($this->arguments_);
 				continue;
 			}
 
@@ -670,11 +446,11 @@ class Semantics
 				throw new SieveException($token, $arg['type']);
 			}
 
-			array_shift($this->s_['arguments']);
+			array_shift($this->arguments_);
 		}
 
 		// Check if command expects any (more) arguments
-		if (empty($this->s_['arguments']))
+		if (empty($this->arguments_))
 		{
 			throw new SieveException($token, Token::Semicolon);
 		}
@@ -685,12 +461,12 @@ class Semantics
 	public function startStringList($token)
 	{
 		$this->validType_($token);
-		$this->s_['arguments'][0]['occurrence'] = '+';
+		$this->arguments_[0]['occurrence'] = '+';
 	}
 
 	public function endStringList()
 	{
-		array_shift($this->s_['arguments']);
+		array_shift($this->arguments_);
 	}
 
 	public function validateToken($token)
@@ -698,10 +474,10 @@ class Semantics
 		// Make sure the argument has a valid type
 		$this->validType_($token);
 
-		foreach ($this->s_['arguments'] as &$arg)
+		foreach ($this->arguments_ as &$arg)
 		{
 			// Build regular expression according to argument type
-			switch ( $arg['type'] )
+			switch ($arg['type'])
 			{
 			case Token::String:
 			case Token::StringList:
@@ -718,9 +494,7 @@ class Semantics
 			{
 				// Call extra processing function if defined
 				if (isset($arg['call']))
-				{
 					$this->invoke_($token, $arg['call'], strtolower($token->text));
-				}
 
 				// Add argument(s) that may now appear after this one
 				if (isset($arg['subArgs']))
@@ -752,7 +526,7 @@ class Semantics
 	public function done($token)
 	{
 		// Check if there are required arguments left
-		foreach ($this->s_['arguments'] as $arg)
+		foreach ($this->arguments_ as $arg)
 		{
 			if ($arg['occurrence'] == '+' || $arg['occurrence'] == '1')
 			{
