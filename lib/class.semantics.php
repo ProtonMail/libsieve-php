@@ -1,6 +1,6 @@
 <?php
 
-require_once('class.extensions.php');
+require_once('class.registry.php');
 require_once('class.token.php');
 require_once('class.exception.php');
 
