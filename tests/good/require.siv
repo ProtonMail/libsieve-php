@@ -1,4 +1,4 @@
 require "fileinto";
 require "fileinto";
 require ["envelope"];
-require ["reject", "comparator-i;octet", "comparator-i;ascii-casemap"];
+require ["reject", "fileinto"];

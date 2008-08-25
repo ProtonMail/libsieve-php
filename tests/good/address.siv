@@ -1,4 +1,4 @@
-require ["comparator-i;ascii-numeric", "comparator-i;octet"];
+require ["comparator-i;ascii-numeric"];
 
 if address :all :is "To" ["a@b.c"]
   { keep; }
