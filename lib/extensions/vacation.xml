@@ -15,6 +15,14 @@
 			<parameter type="string" name="subject string" />
 		</parameter>
 
+		<parameter type="tag" name="from" occurrence="optional" regex="from">
+			<parameter type="string" name="from string" />
+		</parameter>
+
+		<parameter type="tag" name="handle" occurrence="optional" regex="handle">
+			<parameter type="string" name="handle string" />
+		</parameter>
+
 		<parameter type="tag" name="mime" occurrence="optional" regex="mime" />
 
 		<parameter type="string" name="reason" />
