@@ -18,7 +18,15 @@ Script to validate:<br/>
 require_once 'lib/libsieve.php';
 
 if (isset($_POST['script'])) {
-	print stripslashes($_POST['script']);
+	print preg_replace_callback(
+		'/^/m',
+		create_function(
+			'$matches',
+			'static $line_no = 1;
+			return sprintf("<span style=\"background-color:#f5f5f5\">%3d </span>%s", $line_no++, $matches[0]);'
+		),
+		stripslashes($_POST['script'])
+	);
 
 	$text_color = 'green';
 	$text = 'success';
