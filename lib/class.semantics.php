@@ -13,7 +13,6 @@ class Semantics
 	protected $addressPart_;
 	protected $arguments_;
 	protected $deps_ = array();
-	protected $commands_ = 'require|if|elsif|else|redirect|stop|keep|discard';
 
 	public function __construct($token, $prevToken)
 	{
