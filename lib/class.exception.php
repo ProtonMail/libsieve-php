@@ -4,9 +4,12 @@ require_once('class.token.php');
 
 class SieveException extends Exception
 {
+	protected $token_;
+
 	public function __construct(Token $token, $arg)
 	{
 		$message = 'undefined sieve exception';
+		$this->token_ = $token;
 
 		if (is_string($arg))
 		{
@@ -32,6 +35,11 @@ class SieveException extends Exception
 		}
 
 		parent::__construct('line '. $token->line .": $message");
+	}
+
+	public function getLineNo()
+	{
+		return $this->token_->line;
 	}
 }
 
