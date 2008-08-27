@@ -12,45 +12,63 @@
 	[<a href="javascript:history.back()">back</a>] [<a href="index.php">home</a>]
 </p>
 
-<div style="border-style:dashed; border-width:2px; border-color:silver; padding:10px; overflow:auto">
-Script to validate:<br/>
-<pre><?php
+<div style="border:2px dashed silver; padding:10px; overflow:auto">
+Script to validate:<br />
+<?php
 require_once 'lib/libsieve.php';
 
-if (isset($_POST['script'])) {
-	print preg_replace_callback(
-		'/^/m',
-		create_function(
-			'$matches',
-			'static $line_no = 1;
-			return sprintf("<span style=\"background-color:#f5f5f5\">%3d </span>%s", $line_no++, $matches[0]);'
-		),
-		stripslashes($_POST['script'])
-	);
+function print_line($matches)
+{
+	static $line_no = 1;
+	global $error_line;
 
-	$text_color = 'green';
-	$text = 'success';
+	if ($line_no == $error_line) {
+		$bgcolor = "#f5c5c5";
+		$style2 = " style=\"background-color:#f5d5d5\"";
+	}
+	else {
+		$bgcolor = "#f5f5f5";
+		$style2 = "";
+	}
 
-	try
-	{
+	print '<tr><td style="text-align:right; background-color:'. $bgcolor .'">'. $line_no++ .'&nbsp;</td>' .
+		'<td'. $style2 .'>'. rtrim($matches[0]) ."</td></tr>\n";
+}
+
+if (isset($_POST['script']))
+{
+	try {
 		$parser = new Parser();
 		$parser->parse(stripslashes($_POST['script']));
+
+		$text_color = 'green';
+		$text = 'success';
+		$error_line = 0;
 	}
-	catch (Exception $e)
-	{
-		$text_color = 'tomato';
+	catch (SieveException $e) {
+		$text_color = 'black';
 		$text = htmlentities($e->getMessage());
+		$error_line = $e->getLineNo();
 	}
 
-	print '</pre><hr size="1"/>Result: <span style="color:'. $text_color .';font-weight:bold">' . $text ."</span>\n";
-	print '<hr size="1"/><pre style="font-size:x-small">';
-	print htmlentities($parser->dumpParseTree());
+	print '<table cellpadding="0" style="margin:5px 0px 10px 0px; width:100%; border-spacing:0px; font:13px monospace; border:2px solid #f5f5f5">'."\n";
+	print preg_replace_callback("/^(.*)(\n|$)/Um", "print_line",
+		stripslashes(strtr($_POST['script'], array(
+			' ' => '&nbsp;',
+			"\t" => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+		))
+	));
+	print "</table>\n";
+
+	print 'Result: <span style="color:'. $text_color .'; font-weight:bold">' . $text ."</span>\n</div><br />\n\n";
+	print '<div style="border:2px dashed silver; padding:10px; overflow:auto">'."\n".'<pre style="font-size:x-small">';
+	print htmlentities($parser->dumpParseTree()) . "\n</pre>\n";
 }
 else {
 	print "No script to validate.";
 }
 
-?></pre>
+?>
 </div>
 
 <p>
