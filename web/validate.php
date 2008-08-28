@@ -13,7 +13,6 @@
 </p>
 
 <div style="border:2px dashed silver; padding:10px; overflow:auto">
-Script to validate:<br />
 <?php
 require_once 'lib/libsieve.php';
 
@@ -23,12 +22,12 @@ function print_line($matches)
 	global $error_line;
 
 	if ($line_no == $error_line) {
-		$bgcolor = "#f5c5c5";
-		$style2 = " style=\"background-color:#f5d5d5\"";
+		$bgcolor = '#f5c5c5';
+		$style2 = ' style="background-color:#f5d5d5"';
 	}
 	else {
-		$bgcolor = "#f5f5f5";
-		$style2 = "";
+		$bgcolor = '#f5f5f5';
+		$style2 = '';
 	}
 
 	print '<tr><td style="text-align:right; background-color:'. $bgcolor .'">'. $line_no++ .'&nbsp;</td>' .
@@ -51,6 +50,7 @@ if (isset($_POST['script']))
 		$error_line = $e->getLineNo();
 	}
 
+	print "Script to validate:<br />\n";
 	print '<table cellpadding="0" style="margin:5px 0px 10px 0px; width:100%; border-spacing:0px; font:13px monospace; border:2px solid #f5f5f5">'."\n";
 	print preg_replace_callback("/^(.*)(\n|$)/Um", "print_line",
 		stripslashes(strtr($_POST['script'], array(
