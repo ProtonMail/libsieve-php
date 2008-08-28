@@ -13,6 +13,7 @@ class Semantics
 	protected $addressPart_;
 	protected $arguments_;
 	protected $deps_ = array();
+	protected $followupToken_;
 
 	public function __construct($token, $prevToken)
 	{
@@ -24,11 +25,13 @@ class Semantics
 		{
 			$xml = $this->registry_->command($command);
 			$this->arguments_ = $this->makeArguments_($xml);
+			$this->followupToken_ = Token::Semicolon;
 		}
 		else if ($this->registry_->isTest($command))
 		{
 			$xml = $this->registry_->test($command);
 			$this->arguments_ = $this->makeArguments_($xml);
+			$this->followupToken_ = Token::BlockStart;
 		}
 		else
 		{
@@ -442,7 +445,7 @@ class Semantics
 
 		// Check if command expects any (more) arguments
 		if (empty($this->arguments_))
-			throw new SieveException($token, Token::Semicolon);
+			throw new SieveException($token, $this->followupToken_);
 
 		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
 	}
