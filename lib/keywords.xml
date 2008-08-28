@@ -17,7 +17,7 @@
 	<command name="discard" />
 
 	<command name="elsif">
-		<parameter type="test" />
+		<parameter type="test" name="test command" />
 		<parameter type="block" />
 	</command>
 
@@ -26,18 +26,18 @@
 	</command>
 
 	<command name="if">
-		<parameter type="test" />
+		<parameter type="test" name="test command" />
 		<parameter type="block" />
 	</command>
 
 	<command name="keep" />
 
 	<command name="redirect">
-		<parameter type="string" name="address" />
+		<parameter type="string" name="address string" />
 	</command>
 
 	<command name="require">
-		<parameter type="requirestrings" name="require-strings" />
+		<parameter type="requirestrings" name="require string" />
 	</command>
 
 	<command name="stop" />
@@ -47,20 +47,20 @@
 		<parameter type="matchtype" occurrence="optional" />
 		<parameter type="comparator" occurrence="optional" />
 		<parameter type="addresspart" occurrence="optional" />
-		<parameter type="stringlist" name="header-list" />
-		<parameter type="stringlist" name="key-list" />
+		<parameter type="stringlist" name="header list" />
+		<parameter type="stringlist" name="key list" />
 	</test>
 
 	<test name="allof">
-		<parameter type="testlist" />
+		<parameter type="testlist" name="test" />
 	</test>
 
 	<test name="anyof">
-		<parameter type="testlist" />
+		<parameter type="testlist" name="test" />
 	</test>
 
 	<test name="exists">
-		<parameter type="stringlist" name="header-names" />
+		<parameter type="stringlist" name="header names" />
 	</test>
 
 	<test name="false" />
@@ -68,8 +68,8 @@
 	<test name="header">
 		<parameter type="matchtype" occurrence="optional" />
 		<parameter type="comparator" occurrence="optional" />
-		<parameter type="stringlist" name="header-names" />
-		<parameter type="stringlist" name="key-list" />
+		<parameter type="stringlist" name="header names" />
+		<parameter type="stringlist" name="key list" />
 	</test>
 
 	<test name="not">

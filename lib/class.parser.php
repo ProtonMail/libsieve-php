@@ -76,9 +76,7 @@ class Parser
 		while (true)
 		{
 			if (!$this->scanner_->nextTokenIs(Token::Identifier))
-			{
 				break;
-			}
 
 			// Get and check a command token
 			$token = $this->scanner_->nextToken();
@@ -154,9 +152,10 @@ class Parser
 			$token = $this->scanner_->nextToken();
 
 			if (!$token->is(Token::Comma|Token::RightBracket))
-			{
-				throw new SieveException($token, array(Token::Comma|Token::RightBracket));
-			}
+				throw new SieveException($token, array(Token::Comma, Token::RightBracket));
+
+			if ($token->is(Token::Comma))
+				$semantics->continueStringList();
 
 			$this->tree_->addChildTo($parent_id, $token);
 		}

@@ -146,7 +146,7 @@ class Semantics
 		{
 			return (string) $arg['name'];
 		}
-		return 'undefined';
+		return (string) $arg['type'];
 	}
 
 	protected function regex_($arg)
@@ -346,16 +346,12 @@ class Semantics
 	protected function invoke_($token, $func, $arg = array())
 	{
 		if (!is_array($arg))
-		{
 			$arg = array($arg);
-		}
 
 		$err = call_user_func_array(array(&$this, $func), $arg);
 
 		if ($err)
-		{
 			throw new SieveException($token, $err);
-		}
 	}
 
 	protected function setRequire_($extension)
@@ -435,24 +431,18 @@ class Semantics
 			}
 
 			if ($token->is($arg['type']))
-			{
 				return;
-			}
 
 			// Is the argument required
 			if ($arg['occurrence'] != '?' && $arg['occurrence'] != '*')
-			{
 				throw new SieveException($token, $arg['type']);
-			}
 
 			array_shift($this->arguments_);
 		}
 
 		// Check if command expects any (more) arguments
 		if (empty($this->arguments_))
-		{
 			throw new SieveException($token, Token::Semicolon);
-		}
 
 		throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
 	}
@@ -460,6 +450,12 @@ class Semantics
 	public function startStringList($token)
 	{
 		$this->validType_($token);
+		$this->arguments_[0]['type'] = Token::String;
+		$this->arguments_[0]['occurrence'] = '+';
+	}
+
+	public function continueStringList()
+	{
 		$this->arguments_[0]['occurrence'] = '+';
 	}
 
@@ -528,9 +524,7 @@ class Semantics
 		foreach ($this->arguments_ as $arg)
 		{
 			if ($arg['occurrence'] == '+' || $arg['occurrence'] == '1')
-			{
 				throw new SieveException($token, $arg['type']);
-			}
 		}
 
 		// Check if the command depends on use of a certain tag
