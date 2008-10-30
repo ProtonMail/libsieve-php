@@ -1,0 +1,8 @@
+require "variables";
+
+set "foo" "bar";
+set :length :lower "foo_len" "${foo}";
+
+if string :matches ["${foo_len}"] "3" {
+  keep;
+}
