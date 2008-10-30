@@ -1,4 +1,5 @@
 require "vacation";
 
 vacation :days 14 :addresses ["me@here.example.com", "me@there.example.com"]
-	:subject "Hawaii" :mime "I'm gone, see ya!";
+	:subject "Hawaii" :from "me@home.example.com" :handle "1234" :mime
+	"I'm gone, see ya!";
