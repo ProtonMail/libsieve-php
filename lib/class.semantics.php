@@ -161,6 +161,15 @@ class Semantics
 		return '.*';
 	}
 
+	protected function follows_($arg)
+	{
+		if (isset($arg['follows']))
+		{
+			return (string) $arg['follows'];
+		}
+		return '.*';
+	}
+
 	protected function makeValue_($arg)
 	{
 		if (isset($arg->value))
@@ -195,7 +204,8 @@ class Semantics
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->addressPartRegex_(),
 					'call'       => 'addressPartHook_',
-					'name'       => 'address part'
+					'name'       => 'address part',
+					'subArgs'    => $this->makeArguments_($arg)
 				));
 				break;
 
@@ -220,7 +230,8 @@ class Semantics
 						'occurrence' => '1',
 						'call'       => 'comparatorHook_',
 						'regex'      => $this->comparatorRegex_(),
-						'name'       => 'comparator string'
+						'name'       => 'comparator string',
+					    'follows'    => 'comparator'
 					))
 				));
 				break;
@@ -241,7 +252,8 @@ class Semantics
 					'type'       => Token::Number,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
-					'name'       => $this->name_($arg)
+					'name'       => $this->name_($arg),
+					'follows'    => $this->follows_($arg)
 				));
 				break;
 
@@ -260,7 +272,8 @@ class Semantics
 					'type'       => Token::String,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
-					'name'       => $this->name_($arg)
+					'name'       => $this->name_($arg),
+					'follows'    => $this->follows_($arg)
 				));
 				break;
 
@@ -269,7 +282,8 @@ class Semantics
 					'type'       => Token::StringList,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
-					'name'       => $this->name_($arg)
+					'name'       => $this->name_($arg),
+					'follows'    => $this->follows_($arg)
 				));
 				break;
 
@@ -279,7 +293,8 @@ class Semantics
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
 					'name'       => $this->name_($arg),
-					'subArgs'    => $this->makeArguments_($arg->children())
+					'subArgs'    => $this->makeArguments_($arg->children()),
+					'follows'    => $this->follows_($arg)
 				));
 				break;
 
@@ -319,11 +334,13 @@ class Semantics
 	 * Add argument(s) expected / allowed to appear next.
 	 * @param array $value
 	 */
-	protected function addArguments_($subArgs)
+	protected function addArguments_($identifier, $subArgs)
 	{
 		for ($i = count($subArgs); $i > 0; $i--)
 		{
-			array_unshift($this->arguments_, $subArgs[$i-1]);
+			$arg = $subArgs[$i-1];
+			if (preg_match('/^'. $arg['follows'] .'$/si', $identifier))
+				array_unshift($this->arguments_, $arg);
 		}
 	}
 
@@ -359,7 +376,6 @@ class Semantics
 
 	protected function setRequire_($extension)
 	{
-		$extension = str_replace('"', '', $extension);
 		array_push(self::$requiredExtensions_, $extension);
 		$this->registry_->activate($extension);
 	}
@@ -373,13 +389,13 @@ class Semantics
 	 */
 	protected function addressPartHook_($addresspart)
 	{
-		$this->addressPart_ = substr($addresspart, 1);
+		$this->addressPart_ = $addresspart;
 		$xml = $this->registry_->addresspart($this->addressPart_);
 
 		if (isset($xml))
 		{
-			// Add possible value and depedency
-			$this->addArguments_($this->makeArguments_($xml));
+			// Add possible value and dependancy
+			$this->addArguments_($this->addressPart_, $this->makeArguments_($xml));
 			$this->addDependency_('address part', $this->addressPart_, $xml->requires);
 		}
 	}
@@ -393,13 +409,13 @@ class Semantics
 	 */
 	protected function matchTypeHook_($matchtype)
 	{
-		$this->matchType_ = substr($matchtype, 1);
+		$this->matchType_ = $matchtype;
 		$xml = $this->registry_->matchtype($this->matchType_);
 
 		if (isset($xml))
 		{
-			// Add possible value and depedency
-			$this->addArguments_($this->makeArguments_($xml));
+			// Add possible value and dependancy
+			$this->addArguments_($this->matchType_, $this->makeArguments_($xml));
 			$this->addDependency_('match type', $this->matchType_, $xml->requires);
 		}
 	}
@@ -413,12 +429,12 @@ class Semantics
 	 */
 	protected function comparatorHook_($comparator)
 	{
-		$this->comparator_ = substr($comparator, 1, -1);
+		$this->comparator_ = $comparator;
 		$xml = $this->registry_->comparator($this->comparator_);
 
 		if (isset($xml))
 		{
-			// Add possible dependency
+			// Add possible dependancy
 			$this->addDependency_('comparator', $this->comparator_, $xml->requires);
 		}
 	}
@@ -479,24 +495,26 @@ class Semantics
 			{
 			case Token::String:
 			case Token::StringList:
-				$regex = '/^(text:[^\n]*\n'. $arg['regex'] .'\.\r?\n?|"'. $arg['regex'] .'")$/s';
+				$regex = '/^(?:text:[^\n]*\n(?P<one>'. $arg['regex'] .')\.\r?\n?|"(?P<two>'. $arg['regex'] .')")$/s';
 				break;
 			case Token::Tag:
-				$regex = '/^:'. $arg['regex'] .'$/si';
+				$regex = '/^:(?P<one>'. $arg['regex'] .')$/si';
 				break;
 			default:
-				$regex = '/^'. $arg['regex'] .'$/si';
+				$regex = '/^(?P<one>'. $arg['regex'] .')$/si';
 			}
 
-			if (preg_match($regex, $token->text))
+			if (preg_match($regex, $token->text, $match))
 			{
-				// Call extra processing function if defined
-				if (isset($arg['call']))
-					$this->invoke_($token, $arg['call'], strtolower($token->text));
+				$text = ($match['one'] ? $match['one'] : $match['two']);
 
 				// Add argument(s) that may now appear after this one
 				if (isset($arg['subArgs']))
-					$this->addArguments_($arg['subArgs']);
+					$this->addArguments_($text, $arg['subArgs']);
+
+				// Call extra processing function if defined
+				if (isset($arg['call']))
+					$this->invoke_($token, $arg['call'], $text);
 
 				// Check if a possible value of this argument may occur
 				if ($arg['occurrence'] == '?' || $arg['occurrence'] == '1')
