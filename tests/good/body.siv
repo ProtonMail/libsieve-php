@@ -1,0 +1,6 @@
+require "body";
+require "comparator-i;ascii-numeric";
+
+if body :content "text" :contains "foo" { keep; }
+if body :raw ["foo", "bar"] { keep; }
+if body :comparator "i;ascii-numeric" :content "text" "foo" { keep; }
