@@ -1,0 +1,5 @@
+require ["date", "relational", "index"];
+
+if date :value "gt" :index 2 :zone "-0500" "received"
+        "iso8601" "2007-02-26T09:00:00-05:00"
+{ redirect "aftercutoff@example.org"; }
