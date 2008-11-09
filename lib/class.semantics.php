@@ -11,6 +11,7 @@ class Semantics
 	protected $comparator_;
 	protected $matchType_;
 	protected $addressPart_;
+	protected $tags_ = array();
 	protected $arguments_;
 	protected $deps_ = array();
 	protected $followupToken_;
@@ -67,25 +68,20 @@ class Semantics
 		}
 
 		// Check for extension arguments to add to the command
-		foreach ($this->registry_->arguments($command) as $arguments)
+		foreach ($this->registry_->arguments($command) as $arg)
 		{
-			foreach ($arguments->parameter as $p)
+			switch ((string) $arg['type'])
 			{
-				switch ((string) $p['type'])
-				{
-				case 'tag':
-					array_unshift($this->arguments_, array(
-						'type'       => Token::Tag,
-						'occurrence' => $this->occurrence_($p),
-						'regex'      => $this->regex_($p),
-						'name'       => $this->name_($p),
-						'subArgs'    => $this->makeArguments_($p->children())
-					));
-					break;
-
-				default:
-					trigger_error('not implemented');
-				}
+			case 'tag':
+				array_unshift($this->arguments_, array(
+					'type'       => Token::Tag,
+					'occurrence' => $this->occurrence_($arg),
+					'regex'      => $this->regex_($arg),
+					'call'       => 'tagHook_',
+					'name'       => $this->name_($arg),
+					'subArgs'    => $this->makeArguments_($arg->children())
+				));
+				break;
 			}
 		}
 	}
@@ -159,6 +155,15 @@ class Semantics
 			return (string) $arg['regex'];
 		}
 		return '.*';
+	}
+
+	protected function case_($arg)
+	{
+		if (isset($arg['case']))
+		{
+			return (string) $arg['case'];
+		}
+		return 'adhere';
 	}
 
 	protected function follows_($arg)
@@ -262,6 +267,7 @@ class Semantics
 					'type'       => Token::StringList,
 					'occurrence' => $this->occurrence_($arg),
 					'call'       => 'setRequire_',
+					'case'       => 'adhere',
 					'regex'      => $this->requireStringsRegex_(),
 					'name'       => $this->name_($arg)
 				));
@@ -272,6 +278,7 @@ class Semantics
 					'type'       => Token::String,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
+					'case'       => $this->case_($arg),
 					'name'       => $this->name_($arg),
 					'follows'    => $this->follows_($arg)
 				));
@@ -282,6 +289,7 @@ class Semantics
 					'type'       => Token::StringList,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
+					'case'       => $this->case_($arg),
 					'name'       => $this->name_($arg),
 					'follows'    => $this->follows_($arg)
 				));
@@ -292,6 +300,7 @@ class Semantics
 					'type'       => Token::Tag,
 					'occurrence' => $this->occurrence_($arg),
 					'regex'      => $this->regex_($arg),
+					'call'       => 'tagHook_',
 					'name'       => $this->name_($arg),
 					'subArgs'    => $this->makeArguments_($arg->children()),
 					'follows'    => $this->follows_($arg)
@@ -424,7 +433,7 @@ class Semantics
 	 * Hook function that is called after a comparator was found in
 	 * a command. The comparator is remembered in case it's needed for
 	 * comparsion later {@see done}. For a comparator from extensions
-	 * dependency infomation is looked up as well.
+	 * dependency information is looked up as well.
 	 * @param string $comparator
 	 */
 	protected function comparatorHook_($comparator)
@@ -437,6 +446,23 @@ class Semantics
 			// Add possible dependancy
 			$this->addDependency_('comparator', $this->comparator_, $xml->requires);
 		}
+	}
+
+	/**
+	 * Hook function that is called after a tag was found in
+	 * a command. The tag is remembered in case it's needed for
+	 * comparsion later {@see done}. For a tags from extensions
+	 * dependency information is looked up as well.
+	 * @param string $tag
+	 */
+	protected function tagHook_($tag)
+	{
+		array_push($this->tags_, $tag);
+		$xml = $this->registry_->argument($tag);
+
+		// Add possible dependancies
+		if (isset($xml))
+			$this->addDependency_('tag', $tag, $xml->requires);
 	}
 
 	protected function validType_($token)
@@ -495,7 +521,8 @@ class Semantics
 			{
 			case Token::String:
 			case Token::StringList:
-				$regex = '/^(?:text:[^\n]*\n(?P<one>'. $arg['regex'] .')\.\r?\n?|"(?P<two>'. $arg['regex'] .')")$/s';
+				$regex = '/^(?:text:[^\n]*\n(?P<one>'. $arg['regex'] .')\.\r?\n?|"(?P<two>'. $arg['regex'] .')")$/'
+				       . ($arg['case'] == 'ignore' ? 'si' : 's');
 				break;
 			case Token::Tag:
 				$regex = '/^:(?P<one>'. $arg['regex'] .')$/si';
@@ -554,23 +581,30 @@ class Semantics
 			switch ($d['type'])
 			{
 			case 'addresspart':
-				$value = $this->addressPart_;
+				$values = array($this->addressPart_);
 				break;
 
 			case 'matchtype':
-				$value = $this->matchType_;
+				$values = array($this->matchType_);
 				break;
 
 			case 'comparator':
-				$value = $this->comparator_;
+				$values = array($this->comparator_);
+				break;
+
+			case 'tag':
+				$values = $this->tags_;
 				break;
 			}
 
-			if (!preg_match('/^'. $d['regex'] .'$/mi', $value))
+			foreach ($values as $value)
 			{
-				throw new SieveException($token,
-					$d['o_type'] .' '. $d['o_name'] .' needs '. $d['type'] .' '. $d['name']);
+				if (preg_match('/^'. $d['regex'] .'$/mi', $value))
+					break 2;
 			}
+			
+			throw new SieveException($token,
+				$d['o_type'] .' '. $d['o_name'] .' requires use of '. $d['type'] .' '. $d['name']);
 		}
 	}
 }

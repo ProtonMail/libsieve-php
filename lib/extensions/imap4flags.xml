@@ -20,10 +20,10 @@
 		<parameter type="stringlist" name="flag list" />
 	</test>
 
-	<argument extends="(fileinto|keep)">
+	<tagged-argument extends="(fileinto|keep)">
 		<parameter type="tag" name="flags" regex="flags" occurrence="optional">
 			<parameter type="stringlist" name="flag list" />
 		</parameter>
-	</argument>
+	</tagged-argument>
 
 </extension>

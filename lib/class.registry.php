@@ -109,12 +109,13 @@ class KeywordRegistry
 			case 'command':
 				$type =& $this->commands_;
 				break;
-			case 'argument':
-				array_push($this->arguments_, array(
-					'regex' => (string) $e['extends'],
-					'xml'   => $e->children()
-				));
-				return;
+			case 'tagged-argument':
+				$xml = $e->parameter[0];
+				$this->arguments_[(string) $xml['name']] = array(
+					'extends' => (string) $e['extends'],
+					'rules'   => $xml
+				);
+				continue;
 			default:
 				trigger_error('Unsupported extension type \''.
 					$e->getName() ."' in extension '$extension'");
@@ -190,12 +191,19 @@ class KeywordRegistry
 		$res = array();
 		foreach ($this->arguments_ as $arg)
 		{
-			if (preg_match('/'.$arg['regex'].'/', $command))
-			{
-				array_push($res, $arg['xml']);
-			}
+			if (preg_match('/'.$arg['extends'].'/', $command))
+				array_push($res, $arg['rules']);
 		}
 		return $res;
+	}
+
+	public function argument($name)
+	{
+		if (isset($this->arguments_[$name]))
+		{
+			return $this->arguments_[$name]['rules'];
+		}
+		return null;
 	}
 
 	public function requireStrings()
