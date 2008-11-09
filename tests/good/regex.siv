@@ -1,4 +1,6 @@
-require ["regex"];
+require ["regex", "variables"];
+
+set :quoteregex "foo" "[bar]";
 
 if header :regex "a" ["[:digit:]]+"]
 	{ keep; }

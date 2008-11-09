@@ -4,4 +4,8 @@
 
 	<matchtype name="regex" />
 
+	<tagged-argument extends="set">
+		<parameter type="tag" name="modifier" regex="quoteregex" occurrence="optional" />
+	</tagged-argument>
+
 </extension>
