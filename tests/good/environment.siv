@@ -1,0 +1,4 @@
+require "environment";
+
+if environment :matches "remote-host" ["pharmacy", "casino"]
+ { discard; }
