@@ -148,7 +148,7 @@ class Parser
 
 		do
 		{
-			$this->string_($parent_id, &$semantics);
+			$this->string_($parent_id, $semantics);
 			$token = $this->scanner_->nextToken();
 
 			if (!$token->is(Token::Comma|Token::RightBracket))
