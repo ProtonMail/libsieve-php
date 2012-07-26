@@ -120,7 +120,7 @@ class Parser
 			}
 			else if ($this->scanner_->nextTokenIs(Token::StringList))
 			{
-				$this->stringlist_($parent_id, &$semantics);
+				$this->stringlist_($parent_id, $semantics);
 			}
 			else
 			{
@@ -138,7 +138,7 @@ class Parser
 	{
 		if (!$this->scanner_->nextTokenIs(Token::LeftBracket))
 		{
-			$this->string_($parent_id, &$semantics);
+			$this->string_($parent_id, $semantics);
 			return;
 		}
 
