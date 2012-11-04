@@ -38,7 +38,7 @@ if (isset($_POST['script']))
 {
 	try {
 		$parser = new Parser();
-		$parser->parse(stripslashes($_POST['script']));
+		$parser->parse($_POST['script']);
 
 		$text_color = 'green';
 		$text = 'success';
@@ -53,11 +53,11 @@ if (isset($_POST['script']))
 	print "Script to validate:<br />\n";
 	print '<table cellpadding="0" style="margin:5px 0px 10px 0px; width:100%; border-spacing:0px; font:13px monospace; border:2px solid #f5f5f5">'."\n";
 	print preg_replace_callback("/^(.*)(\n|$)/Um", "print_line",
-		stripslashes(strtr($_POST['script'], array(
+		strtr($_POST['script'], array(
 			' ' => '&nbsp;',
 			"\t" => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
 		))
-	));
+	);
 	print "</table>\n";
 
 	print 'Result: <span style="color:'. $text_color .'; font-weight:bold">' . $text ."</span>\n</div><br />\n\n";
