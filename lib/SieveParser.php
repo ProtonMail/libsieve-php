@@ -18,6 +18,11 @@ class SieveParser
             $this->parse($script);
     }
 
+    public function GetParseTree()
+    {
+        return $this->tree_;
+    }
+
     public function dumpParseTree()
     {
         return $this->tree_->dump();
