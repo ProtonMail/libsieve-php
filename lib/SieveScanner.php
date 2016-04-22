@@ -1,8 +1,8 @@
 <?php namespace Sieve;
 
-include_once('class.token.php');
+include_once('SieveToken.php');
 
-class Scanner
+class SieveScanner
 {
     public function __construct(&$script)
     {
@@ -31,9 +31,9 @@ class Scanner
             {
                 if (preg_match('/^'. $regex .'/', mb_substr($script, $pos), $match))
                 {
-                    array_push($this->tokens_, new Token($type, $match[0], $line));
+                    array_push($this->tokens_, new SieveToken($type, $match[0], $line));
 
-                    if ($type == Token::Unknown)
+                    if ($type == SieveToken::Unknown)
                         return;
 
                     $pos += mb_strlen($match[0]);
@@ -43,7 +43,7 @@ class Scanner
             }
         }
 
-        array_push($this->tokens_, new Token(Token::ScriptEnd, '', $line));
+        array_push($this->tokens_, new SieveToken(SieveToken::ScriptEnd, '', $line));
     }
 
     public function nextTokenIs($type)
@@ -56,7 +56,7 @@ class Scanner
         $offset = 0;
         do {
             $next = $this->tokens_[$this->tokenPos_ + $offset++];
-        } while ($next->is(Token::Comment|Token::Whitespace));
+        } while ($next->is(SieveToken::Comment|SieveToken::Whitespace));
 
         return $next;
     }
@@ -65,7 +65,7 @@ class Scanner
     {
         $token = $this->tokens_[$this->tokenPos_++];
 
-        while ($token->is(Token::Comment|Token::Whitespace))
+        while ($token->is(SieveToken::Comment|SieveToken::Whitespace))
         {
             if ($this->ptFn_ != null)
                 call_user_func($this->ptFn_, $token);
@@ -80,21 +80,21 @@ class Scanner
     protected $tokenPos_ = 0;
     protected $tokens_ = array();
     protected $tokenMatch_ = array (
-        Token::LeftBracket       =>  '\[',
-        Token::RightBracket      =>  '\]',
-        Token::BlockStart        =>  '\{',
-        Token::BlockEnd          =>  '\}',
-        Token::LeftParenthesis   =>  '\(',
-        Token::RightParenthesis  =>  '\)',
-        Token::Comma             =>  ',',
-        Token::Semicolon         =>  ';',
-        Token::Whitespace        =>  '[ \r\n\t]+',
-        Token::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        Token::QuotedString      =>  '"(?:\\\\[\\\\"]|[^\x00"])*"',
-        Token::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
-        Token::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
-        Token::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
-        Token::Identifier        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        Token::Unknown           =>  '[^ \r\n\t]+'
+        SieveToken::LeftBracket       =>  '\[',
+        SieveToken::RightBracket      =>  '\]',
+        SieveToken::BlockStart        =>  '\{',
+        SieveToken::BlockEnd          =>  '\}',
+        SieveToken::LeftParenthesis   =>  '\(',
+        SieveToken::RightParenthesis  =>  '\)',
+        SieveToken::Comma             =>  ',',
+        SieveToken::Semicolon         =>  ';',
+        SieveToken::Whitespace        =>  '[ \r\n\t]+',
+        SieveToken::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
+        SieveToken::QuotedString      =>  '"(?:\\\\[\\\\"]|[^\x00"])*"',
+        SieveToken::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
+        SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
+        SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
+        SieveToken::Identifier        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
+        SieveToken::Unknown           =>  '[^ \r\n\t]+'
     );
 }

@@ -1,6 +1,6 @@
 <?php namespace Sieve;
 
-class Tree
+class SieveTree
 {
     protected $childs_;
     protected $parents_;
@@ -19,12 +19,12 @@ class Tree
         $this->nodes_[0] = $name;
     }
 
-    public function addChild(Dumpable $child)
+    public function addChild(SieveDumpable $child)
     {
         return $this->addChildTo($this->max_id_, $child);
     }
 
-    public function addChildTo($parent_id, Dumpable $child)
+    public function addChildTo($parent_id, SieveDumpable $child)
     {
         if (!is_int($parent_id)
          || !isset($this->nodes_[$parent_id]))

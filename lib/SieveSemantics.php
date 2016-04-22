@@ -1,10 +1,10 @@
 <?php namespace Sieve;
 
-require_once('class.registry.php');
-require_once('class.token.php');
-require_once('class.exception.php');
+require_once('SieveKeywordRegistry.php');
+require_once('SieveToken.php');
+require_once('SieveException.php');
 
-class Semantics
+class SieveSemantics
 {
     protected static $requiredExtensions_ = array();
 
@@ -18,7 +18,7 @@ class Semantics
 
     public function __construct($token, $prevToken)
     {
-        $this->registry_ = KeywordRegistry::get();
+        $this->registry_ = SieveKeywordRegistry::get();
         $command = strtolower($token->text);
 
         // Check the registry for $command
@@ -26,13 +26,13 @@ class Semantics
         {
             $xml = $this->registry_->command($command);
             $this->arguments_ = $this->makeArguments_($xml);
-            $this->followupToken_ = Token::Semicolon;
+            $this->followupToken_ = SieveToken::Semicolon;
         }
         else if ($this->registry_->isTest($command))
         {
             $xml = $this->registry_->test($command);
             $this->arguments_ = $this->makeArguments_($xml);
-            $this->followupToken_ = Token::BlockStart;
+            $this->followupToken_ = SieveToken::BlockStart;
         }
         else
         {
@@ -74,7 +74,7 @@ class Semantics
             {
             case 'tag':
                 array_unshift($this->arguments_, array(
-                    'type'       => Token::Tag,
+                    'type'       => SieveToken::Tag,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->regex_($arg),
                     'call'       => 'tagHook_',
@@ -205,7 +205,7 @@ class Semantics
             {
             case 'addresspart':
                 array_push($arguments, array(
-                    'type'       => Token::Tag,
+                    'type'       => SieveToken::Tag,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->addressPartRegex_(),
                     'call'       => 'addressPartHook_',
@@ -216,7 +216,7 @@ class Semantics
 
             case 'block':
                 array_push($arguments, array(
-                    'type'       => Token::BlockStart,
+                    'type'       => SieveToken::BlockStart,
                     'occurrence' => '1',
                     'regex'      => '{',
                     'name'       => 'block',
@@ -226,12 +226,12 @@ class Semantics
 
             case 'comparator':
                 array_push($arguments, array(
-                    'type'       => Token::Tag,
+                    'type'       => SieveToken::Tag,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => 'comparator',
                     'name'       => 'comparator',
                     'subArgs'    => array( array(
-                        'type'       => Token::String,
+                        'type'       => SieveToken::String,
                         'occurrence' => '1',
                         'call'       => 'comparatorHook_',
                         'regex'      => $this->comparatorRegex_(),
@@ -243,7 +243,7 @@ class Semantics
 
             case 'matchtype':
                 array_push($arguments, array(
-                    'type'       => Token::Tag,
+                    'type'       => SieveToken::Tag,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->matchTypeRegex_(),
                     'call'       => 'matchTypeHook_',
@@ -254,7 +254,7 @@ class Semantics
 
             case 'number':
                 array_push($arguments, array(
-                    'type'       => Token::Number,
+                    'type'       => SieveToken::Number,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->regex_($arg),
                     'name'       => $this->name_($arg),
@@ -264,7 +264,7 @@ class Semantics
 
             case 'requirestrings':
                 array_push($arguments, array(
-                    'type'       => Token::StringList,
+                    'type'       => SieveToken::StringList,
                     'occurrence' => $this->occurrence_($arg),
                     'call'       => 'setRequire_',
                     'case'       => 'adhere',
@@ -275,7 +275,7 @@ class Semantics
 
             case 'string':
                 array_push($arguments, array(
-                    'type'       => Token::String,
+                    'type'       => SieveToken::String,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->regex_($arg),
                     'case'       => $this->case_($arg),
@@ -286,7 +286,7 @@ class Semantics
 
             case 'stringlist':
                 array_push($arguments, array(
-                    'type'       => Token::StringList,
+                    'type'       => SieveToken::StringList,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->regex_($arg),
                     'case'       => $this->case_($arg),
@@ -297,7 +297,7 @@ class Semantics
 
             case 'tag':
                 array_push($arguments, array(
-                    'type'       => Token::Tag,
+                    'type'       => SieveToken::Tag,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->regex_($arg),
                     'call'       => 'tagHook_',
@@ -309,7 +309,7 @@ class Semantics
 
             case 'test':
                 array_push($arguments, array(
-                    'type'       => Token::Identifier,
+                    'type'       => SieveToken::Identifier,
                     'occurrence' => $this->occurrence_($arg),
                     'regex'      => $this->testsRegex_(),
                     'name'       => $this->name_($arg),
@@ -319,14 +319,14 @@ class Semantics
 
             case 'testlist':
                 array_push($arguments, array(
-                    'type'       => Token::LeftParenthesis,
+                    'type'       => SieveToken::LeftParenthesis,
                     'occurrence' => '1',
                     'regex'      => '\(',
                     'name'       => $this->name_($arg),
                     'subArgs'    => null
                 ));
                 array_push($arguments, array(
-                    'type'       => Token::Identifier,
+                    'type'       => SieveToken::Identifier,
                     'occurrence' => '+',
                     'regex'      => $this->testsRegex_(),
                     'name'       => $this->name_($arg),
@@ -489,13 +489,13 @@ class Semantics
         if (empty($this->arguments_))
             throw new SieveException($token, $this->followupToken_);
 
-        throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
+        throw new SieveException($token, 'unexpected '. SieveToken::typeString($token->type) .' '. $token->text);
     }
 
     public function startStringList($token)
     {
         $this->validType_($token);
-        $this->arguments_[0]['type'] = Token::String;
+        $this->arguments_[0]['type'] = SieveToken::String;
         $this->arguments_[0]['occurrence'] = '+';
     }
 
@@ -519,12 +519,12 @@ class Semantics
             // Build regular expression according to argument type
             switch ($arg['type'])
             {
-            case Token::String:
-            case Token::StringList:
+            case SieveToken::String:
+            case SieveToken::StringList:
                 $regex = '/^(?:text:[^\n]*\n(?P<one>'. $arg['regex'] .')\.\r?\n?|"(?P<two>'. $arg['regex'] .')")$/'
                        . ($arg['case'] == 'ignore' ? 'si' : 's');
                 break;
-            case Token::Tag:
+            case SieveToken::Tag:
                 $regex = '/^:(?P<one>'. $arg['regex'] .')$/si';
                 break;
             default:
@@ -559,11 +559,11 @@ class Semantics
             if ($token->is($arg['type']) && $arg['occurrence'] == 1)
             {
                 throw new SieveException($token,
-                    Token::typeString($token->type) ." $token->text where ". $arg['name'] .' expected');
+                    SieveToken::typeString($token->type) ." $token->text where ". $arg['name'] .' expected');
             }
         }
 
-        throw new SieveException($token, 'unexpected '. Token::typeString($token->type) .' '. $token->text);
+        throw new SieveException($token, 'unexpected '. SieveToken::typeString($token->type) .' '. $token->text);
     }
 
     public function done($token)

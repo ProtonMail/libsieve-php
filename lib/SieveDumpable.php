@@ -1,6 +1,6 @@
 <?php namespace Sieve;
 
-interface Dumpable
+interface SieveDumpable
 {
 	function dump();
 	function text();

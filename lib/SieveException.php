@@ -1,12 +1,14 @@
 <?php namespace Sieve;
 
-require_once('class.token.php');
+require_once('SieveToken.php');
+
+use Exception;
 
 class SieveException extends Exception
 {
     protected $token_;
 
-    public function __construct(Token $token, $arg)
+    public function __construct(SieveToken $token, $arg)
     {
         $message = 'undefined sieve exception';
         $this->token_ = $token;
@@ -19,18 +21,18 @@ class SieveException extends Exception
         {
             if (is_array($arg))
             {
-                $type = Token::typeString(array_shift($arg));
+                $type = SieveToken::typeString(array_shift($arg));
                 foreach($arg as $t)
                 {
-                    $type .= ' or '. Token::typeString($t);
+                    $type .= ' or '. SieveToken::typeString($t);
                 }
             }
             else
             {
-                $type = Token::typeString($arg);
+                $type = SieveToken::typeString($arg);
             }
 
-            $tokenType = Token::typeString($token->type);
+            $tokenType = SieveToken::typeString($token->type);
             $message = "$tokenType where $type expected near ". $token->text;
         }
 

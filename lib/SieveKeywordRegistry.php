@@ -1,6 +1,6 @@
 <?php namespace Sieve;
 
-class KeywordRegistry
+class SieveKeywordRegistry
 {
     protected $registry_ = array();
     protected $matchTypes_ = array();
@@ -65,7 +65,7 @@ class KeywordRegistry
     {
         if (self::$instance == null)
         {
-            self::$instance = new KeywordRegistry();
+            self::$instance = new SieveKeywordRegistry();
         }
 
         self::$refcount++;

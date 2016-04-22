@@ -1,8 +1,8 @@
 <?php namespace Sieve;
 
-include_once('iface.dumpable.php');
+include_once('SieveDumpable.php');
 
-class Token implements Dumpable
+class SieveToken implements SieveDumpable
 {
     const Unknown          = 0x0000;
     const ScriptEnd        = 0x0001;
@@ -41,7 +41,7 @@ class Token implements Dumpable
 
     public function dump()
     {
-        return '<'. Token::escape($this->text) .'> type:'. Token::typeString($this->type) .' line:'. $this->line;
+        return '<'. SieveToken::escape($this->text) .'> type:'. SieveToken::typeString($this->type) .' line:'. $this->line;
     }
 
     public function text()
@@ -58,24 +58,24 @@ class Token implements Dumpable
     {
         switch ($type)
         {
-        case Token::Identifier: return 'identifier';
-        case Token::Whitespace: return 'whitespace';
-        case Token::QuotedString: return 'quoted string';
-        case Token::Tag: return 'tag';
-        case Token::Semicolon: return 'semicolon';
-        case Token::LeftBracket: return 'left bracket';
-        case Token::RightBracket: return 'right bracket';
-        case Token::BlockStart: return 'block start';
-        case Token::BlockEnd: return 'block end';
-        case Token::LeftParenthesis: return 'left parenthesis';
-        case Token::RightParenthesis: return 'right parenthesis';
-        case Token::Comma: return 'comma';
-        case Token::Number: return 'number';
-        case Token::Comment: return 'comment';
-        case Token::MultilineString: return 'multiline string';
-        case Token::ScriptEnd: return 'script end';
-        case Token::String: return 'string';
-        case Token::StringList: return 'string list';
+        case SieveToken::Identifier: return 'identifier';
+        case SieveToken::Whitespace: return 'whitespace';
+        case SieveToken::QuotedString: return 'quoted string';
+        case SieveToken::Tag: return 'tag';
+        case SieveToken::Semicolon: return 'semicolon';
+        case SieveToken::LeftBracket: return 'left bracket';
+        case SieveToken::RightBracket: return 'right bracket';
+        case SieveToken::BlockStart: return 'block start';
+        case SieveToken::BlockEnd: return 'block end';
+        case SieveToken::LeftParenthesis: return 'left parenthesis';
+        case SieveToken::RightParenthesis: return 'right parenthesis';
+        case SieveToken::Comma: return 'comma';
+        case SieveToken::Number: return 'number';
+        case SieveToken::Comment: return 'comment';
+        case SieveToken::MultilineString: return 'multiline string';
+        case SieveToken::ScriptEnd: return 'script end';
+        case SieveToken::String: return 'string';
+        case SieveToken::StringList: return 'string list';
         default: return 'unknown token';
         }
     }
