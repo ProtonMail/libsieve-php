@@ -1,8 +1,6 @@
-<?php
+<?php namespace Sieve;
 
 class SieveScript
 {
-	// TODO: implement
+    // TODO: implement
 }
-
-?>

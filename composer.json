@@ -1,15 +1,16 @@
 {
     "name": "ProtonMail/libsieve-php",
-    "type": "library",
     "description": "libsieve-php is a library to manage and modify sieve (RFC5228) scripts.",
     "keywords": ["sieve", "filters", "mail"],
-    "homepage": "https://sourceforge.net/projects/libsieve-php/",
+    "type": "library",
     "license": "GPLv3",
+    "homepage": "https://sourceforge.net/projects/libsieve-php/",
     "support":
     {
         "issues": "https://github.com/ProtonMail/libsieve-php/issues"
     },
-    "authors": [
+    "authors":
+    [
         {
             "name": "Heiko Hund",
             "homepage": "https://sourceforge.net/u/heikoh/profile/"
@@ -20,7 +21,15 @@
             "homepage": "https://protonmail.com"
         }
     ],
-    "require": {
+    "require":
+    {
         "php": ">=5.3.9"
+    },
+    "autoload":
+    {
+        "psr-4":
+        {
+            "Sieve\\": "lib/"
+        }
     }
 }
