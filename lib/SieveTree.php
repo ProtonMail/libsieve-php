@@ -86,7 +86,7 @@ class SieveTree
         {
             $child_node = $this->nodes_[$childs[$i-1]];
             $infix = ($i == $last_child ? '`--- ' : '|--- ');
-            $this->dump_ .= $prefix . $infix . $child_node->dump() ."\n";
+            $this->dump_ .= $prefix . $infix . $child_node->dump() . " (id:" . $childs[$i-1] . ")\n";
 
             $next_prefix = $prefix . ($i == $last_child ? '   ' : '|  ');
             $this->dumpChilds_($childs[$i-1], $next_prefix);

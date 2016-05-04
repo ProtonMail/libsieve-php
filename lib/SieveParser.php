@@ -56,8 +56,12 @@ class SieveParser
     /*******************************************************************************
      * methods for recursive descent start below
      */
+    public function passthroughWhitespaceComment($token)
+    {
+        return 0;
+    }
 
-    public function commentOrWhitespace_($token)
+    public function passthroughFunction($token)
     {
         $this->tree_->addChild($token);
     }
@@ -67,8 +71,15 @@ class SieveParser
         $this->script_ = $script;
 
         $this->scanner_ = new SieveScanner($this->script_);
-        $this->scanner_->setPassthroughFunc(array($this, 'commentOrWhitespace_'));
-        $this->tree_ = new SieveTree('parse tree');
+
+        // Define what happens with passthrough tokens like whitespacs and comments
+        $this->scanner_->setPassthroughFunc(
+            array(
+                $this, 'passthroughWhitespaceComment'
+            )
+        );
+
+        $this->tree_ = new SieveTree('tree');
 
         $this->commands_($this->tree_->getRoot());
 
