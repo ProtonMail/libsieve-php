@@ -234,6 +234,7 @@ class SieveSemantics
                         'type'       => SieveToken::String,
                         'occurrence' => '1',
                         'call'       => 'comparatorHook_',
+                        'case'       => 'adhere',
                         'regex'      => $this->comparatorRegex_(),
                         'name'       => 'comparator string',
                         'follows'    => 'comparator'

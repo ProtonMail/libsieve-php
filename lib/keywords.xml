@@ -8,6 +8,7 @@
 
 	<comparator name="i;octet" />
 	<comparator name="i;ascii-casemap" />
+	<comparator name="i;unicode-casemap" />
 
 	<addresspart name="all" />
 	<addresspart name="localpart" />
