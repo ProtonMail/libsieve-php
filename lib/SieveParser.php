@@ -83,8 +83,10 @@ class SieveParser
 
         $this->commands_($this->tree_->getRoot());
 
-        if (!$this->scanner_->nextTokenIs(SieveToken::ScriptEnd))
+        if (!$this->scanner_->nextTokenIs(SieveToken::ScriptEnd)) {
+            $token = $this->scanner_->nextToken();
             throw new SieveException($token, SieveToken::ScriptEnd);
+        }
     }
 
     protected function commands_($parent_id)
