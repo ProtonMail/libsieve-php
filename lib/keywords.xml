@@ -5,6 +5,9 @@
 	<matchtype name="is" />
 	<matchtype name="contains" />
 	<matchtype name="matches" />
+	<matchtype name="value">
+		<parameter type="string" name="operator"/>
+	</matchtype>
 
 	<comparator name="i;octet" />
 	<comparator name="i;ascii-casemap" />
