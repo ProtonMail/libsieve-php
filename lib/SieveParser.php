@@ -163,6 +163,14 @@ class SieveParser
         $token = $this->scanner_->nextToken();
         $semantics->startStringList($token);
         $this->tree_->addChildTo($parent_id, $token);
+        
+        if($this->scanner_->nextTokenIs(SieveToken::RightBracket)) {
+            //allow empty lists
+            $token = $this->scanner_->nextToken();
+            $this->tree_->addChildTo($parent_id, $token);
+            $semantics->endStringList();
+            return;
+        }
 
         do
         {
