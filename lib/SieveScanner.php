@@ -90,7 +90,7 @@ class SieveScanner
         SieveToken::Semicolon         =>  ';',
         SieveToken::Whitespace        =>  '[ \r\n\t]+',
         SieveToken::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        SieveToken::QuotedString      =>  '"(?:\\\\[\\\\"]|[^\x00"])*"',
+        SieveToken::QuotedString      =>  '"(.*?[^\\])??((\\\\)+)?+"',
         SieveToken::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
         SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
         SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
