@@ -90,9 +90,19 @@ class SieveScanner
         SieveToken::Semicolon         =>  ';',
         SieveToken::Whitespace        =>  '[ \r\n\t]+',
         SieveToken::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        /* Match strings starting with a double quote (") followed by multiple (or none) strings that end with \",
-         where the quote must go after and odd number of slashes and then allow anything that does not contain a quote */
-        SieveToken::QuotedString      =>  '"([^"]*[^"\\\\](\\\\\\\\)*(\\\\"))*[^"]*"',
+        /*
+        "                           # match a quotation mark
+        (                           # start matching parts that include an escaped quotation mark
+        ([^"]*[^"\\\\])             # match a string without quotation marks and not ending with a backlash
+        ?                           # this also includes the empty string
+        (\\\\\\\\)*                 # match any groups of even number of backslashes
+                                    # (thus the character after these groups are not escaped)
+        \\\\"                       # match an escaped quotation mark
+        )*                          # accept any number of strings that end with an escaped quotation mark
+        [^"]*                       # accept any trailing part that does not contain any quotation marks
+        "                           # end of the quoted string
+        */
+        SieveToken::QuotedString      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
         SieveToken::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
         SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
         SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
