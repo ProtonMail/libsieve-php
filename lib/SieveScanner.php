@@ -92,7 +92,7 @@ class SieveScanner
         SieveToken::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
         /* Match strings starting with a double quote (") followed by multiple (or none) strings that end with \",
          where the quote must go after and odd number of slashes and then allow anything that does not contain a quote */
-        SieveToken::QuotedString      =>  '"([^"]*(\\\\\\\\)*(\\\\"))*[^"]*"',
+        SieveToken::QuotedString      =>  '"([^"]*[^"\\\\](\\\\\\\\)*(\\\\"))*[^"]*"',
         SieveToken::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
         SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
         SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
