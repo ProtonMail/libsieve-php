@@ -23,27 +23,60 @@ class SieveScanner
         $pos = 0;
         $line = 1;
 
-        $script_length = mb_strlen($script);
+        $scriptLength = mb_strlen($script);
 
-        while ($pos < $script_length)
-        {
-            foreach ($this->tokenMatch_ as $type => $regex)
-            {
-                if (preg_match('/^'. $regex .'/', mb_substr($script, $pos), $match))
-                {
-                    array_push($this->tokens_, new SieveToken($type, $match[0], $line));
+        $unprocessedScript = $script;
 
-                    if ($type == SieveToken::Unknown)
-                        return;
 
-                    $pos += mb_strlen($match[0]);
-                    $line += mb_substr_count($match[0], "\n");
-                    break;
-                }
-            }
+        //create one regex to find the right match
+        //avoids looping over all possible tokens: increases performance
+        $nameToType = [];
+        $regex = [];
+        // chr(65) == 'A'
+        $i = 65;
+
+        foreach ($this->tokenMatch_ as $type => $subregex) {
+            $nameToType[chr($i)] = $type;
+            $regex[] = "(?P<". chr($i) . ">^$subregex)";
+            $i++;
         }
 
-        array_push($this->tokens_, new SieveToken(SieveToken::ScriptEnd, '', $line));
+        $regex = '/' . join('|', $regex) . '/';
+
+        while ($pos < $scriptLength)
+        {
+            if (preg_match($regex, $unprocessedScript, $match)) {
+
+                // only keep the group that match and we only want matches with group names
+                // we can use the group name to find the token type using nameToType
+                $filterMatch = array_filter(array_filter($match), 'is_string', ARRAY_FILTER_USE_KEY);
+
+                // the first element in filterMatch will contain the matched group and the key will be the name
+                $type = $nameToType[key($filterMatch)];
+                $currentMatch = current($filterMatch);
+
+                //create the token
+                $token = new SieveToken($type, $currentMatch, $line);
+                $this->tokens_[] = $token;
+
+                if ($type == SieveToken::Unknown)
+                    return;
+
+                // just remove the part that we parsed: don't extract the new substring using script length
+                // as mb_strlen is \theta(pos)  (it's linear in the position)
+                $matchLength = mb_strlen($currentMatch);
+                $unprocessedScript = mb_substr($unprocessedScript, $matchLength);
+
+                $pos += $matchLength;
+                $line += mb_substr_count($currentMatch, "\n");
+            } else {
+                $this->tokens_[] = new SieveToken(SieveToken::Unknown, '', $line);
+                return;
+            }
+
+        }
+
+        $this->tokens_[] = new SieveToken(SieveToken::ScriptEnd, '', $line);
     }
 
     public function nextTokenIs($type)
