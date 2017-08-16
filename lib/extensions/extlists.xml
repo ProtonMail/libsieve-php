@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="extlists">
+
+	<matchtype name="list">
+	</matchtype>
+
+	<test name="valid_ext_lists">
+		<parameter type="stringlist" name="list urns" />
+	</test>
+
+</extension>
