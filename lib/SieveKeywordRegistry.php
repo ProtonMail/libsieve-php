@@ -10,10 +10,7 @@ class SieveKeywordRegistry
     protected $tests_ = array();
     protected $arguments_ = array();
 
-    protected static $refcount = 0;
-    protected static $instance = null;
-
-    protected function __construct()
+    public function __construct($extensions_enabled, $custom_extensions)
     {
         $keywords = simplexml_load_file(dirname(__FILE__) .'/keywords.xml');
         foreach ($keywords->children() as $keyword)
@@ -37,7 +34,7 @@ class SieveKeywordRegistry
                 break;
             default:
                 trigger_error('Unsupported keyword type "'. $keyword->getName()
-                    . '" in file "keywords/'. basename($file) .'"');
+                    . '" in file "keywords.xml"');
                 return;
             }
 
@@ -53,31 +50,26 @@ class SieveKeywordRegistry
             $extension = simplexml_load_file($file);
             $name = (string) $extension['name'];
 
+            if ($extensions_enabled !== null && !in_array($name, $extensions_enabled)) {
+                continue;
+            }
+
             if (array_key_exists($name, $this->registry_))
             {
                 trigger_error('overwriting extension "'. $name .'"');
             }
             $this->registry_[$name] = $extension;
         }
-    }
 
-    public static function get()
-    {
-        if (self::$instance == null)
-        {
-            self::$instance = new SieveKeywordRegistry();
-        }
+        foreach ($custom_extensions as $custom_extension) {
+            $extension = simplexml_load_file($custom_extension);
+            $name = (string) $extension['name'];
 
-        self::$refcount++;
-
-        return self::$instance;
-    }
-
-    public function put()
-    {
-        if (--self::$refcount == 0)
-        {
-            self::$instance = null;
+            if (array_key_exists($name, $this->registry_))
+            {
+                trigger_error('overwriting extension "'. $name .'"');
+            }
+            $this->registry_[$name] = $extension;
         }
     }
 

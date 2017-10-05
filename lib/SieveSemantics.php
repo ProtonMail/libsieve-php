@@ -16,9 +16,9 @@ class SieveSemantics
     protected $deps_ = array();
     protected $followupToken_;
 
-    public function __construct($token, $prevToken)
+    public function __construct($registry, $token, $prevToken)
     {
-        $this->registry_ = SieveKeywordRegistry::get();
+        $this->registry_ = $registry;
         $command = strtolower($token->text);
 
         // Check the registry for $command
