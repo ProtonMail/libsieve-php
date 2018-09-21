@@ -59,7 +59,7 @@ class SieveParser
      */
     public function passthroughWhitespaceComment($token)
     {
-        return 0;
+        $this->tree_->addChild($token);
     }
 
     public function passthroughFunction($token)

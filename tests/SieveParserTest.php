@@ -5,10 +5,36 @@ use Sieve\SieveParser;
 
 final class SieveParserTest extends TestCase
 {
-    public function testTest()
+    public function testWhiteSpacesArePreserved()
     {
+        $sieve = <<<EOS
+require "vacation";
+require ["vacation", "relational"];
+
+# I don't want this comment to be removed.
+
+if header :value     /* ignored */  "lt" ["x-priority"] ["3"]
+{
+    /* the priority is low */
+
+    stop
+    ;
+}
+
+vacation :mime 
+"Content-Type: text/html
+I'm out of office, please contact Joan Doe instead.
+Best regards
+stop;
+John Doe";
+
+
+vacation "stop;";stop;
+EOS;
         $parser = new SieveParser();
-        static::assertTrue(true);
+        $parser->parse($sieve);;
+
+        static::assertEquals($sieve, $parser->GetParseTree()->GetText());
     }
 
     private function provider($dir_name)
