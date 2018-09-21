@@ -86,11 +86,6 @@ class SieveSemantics
         }
     }
 
-    public function __destruct()
-    {
-        $this->registry_->put();
-    }
-
     // TODO: the *Regex functions could possibly also be static properties
     protected function requireStringsRegex_()
     {
