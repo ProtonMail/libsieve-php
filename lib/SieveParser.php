@@ -8,6 +8,7 @@ include_once 'SieveKeywordRegistry.php';
 
 class SieveParser
 {
+    /** @var SieveScanner the scanner */
     protected $scanner_;
     protected $script_;
     protected $tree_;
@@ -92,6 +93,7 @@ class SieveParser
 
     protected function commands_($parent_id)
     {
+        $token = null;
         while (true)
         {
             if (!$this->scanner_->nextTokenIs(SieveToken::Identifier))
@@ -123,6 +125,9 @@ class SieveParser
 
             $semantics->done($token);
             $this->tree_->addChildTo($this_node, $token);
+        }
+        if ($this->scanner_->nextTokenIs(SieveToken::ScriptEnd)) {
+            $this->done();
         }
     }
 
@@ -252,5 +257,10 @@ class SieveParser
             throw new SieveException($token, SieveToken::BlockEnd);
         }
         $this->tree_->addChildTo($parent_id, $token);
+    }
+
+    protected function done()
+    {
+        $this->registry_->validateRequires($this->scanner_->peekNextToken());
     }
 }

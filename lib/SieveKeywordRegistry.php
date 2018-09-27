@@ -10,6 +10,29 @@ class SieveKeywordRegistry
     protected $tests_ = array();
     protected $arguments_ = array();
 
+    /**
+     * @var array a map with the extension name as key.
+     *
+     * The value does not matter, to remove an extension, unset the key.
+     */
+    protected $loadedExtensions = [];
+
+    /**
+     * @var array a map defining which extensions are forbidden.
+     *
+     * The key is the forbidden extension's name, the value is an array
+     * containing all the extensions that forbids the current extension
+     * usage.
+     */
+    protected $forbiddenExtensions = [];
+
+    /**
+     * @var array extensions that are required by another extension.
+     *
+     * The key is the require extensions. The value is an array of extensions, which require the current extension.
+     */
+    protected $requiredExtensions = [];
+
     public function __construct($extensions_enabled, $custom_extensions)
     {
         $keywords = simplexml_load_file(dirname(__FILE__) .'/keywords.xml');
@@ -73,14 +96,43 @@ class SieveKeywordRegistry
         }
     }
 
-    public function activate($extension)
+    /**
+     * Activates an extension.
+     *
+     * @param string $extension
+     */
+    public function activate(string $extension)
     {
-        if (!isset($this->registry_[$extension]))
-        {
+        if (
+            !isset($this->registry_[$extension])  // extension unknown
+            || isset($this->loadedExtensions[$extension]) // already loaded
+        ) {
             return;
         }
 
+        $this->loadedExtensions[$extension] = true;
+
+        // we can safely unset the required extension
+        unset($this->requiredExtensions[$extension]);
+
         $xml = $this->registry_[$extension];
+
+        if (isset($xml["require"])) {
+            $requireExtensions = explode(',', $xml["require"]);
+            foreach ($requireExtensions as $require) {
+                if ($require[0] !== '!') {
+                    if (!isset($this->loadedExtensions[$require])) {
+                        // $require is needed, but not yet loaded.
+                        $this->requiredExtensions[$require] = $this->requiredExtensions[$require] ?? [];
+                        $this->requiredExtensions[$require][] = $extension;
+                    }
+                } else {
+                    $forbidden = ltrim($require, '!');
+                    $this->forbiddenExtensions[$forbidden] = $this->forbiddenExtensions[$forbidden] ?? [];
+                    $this->forbiddenExtensions[$forbidden][] = $extension;
+                }
+            }
+        }
 
         foreach ($xml->children() as $e)
         {
@@ -103,15 +155,14 @@ class SieveKeywordRegistry
                 break;
             case 'tagged-argument':
                 $xml = $e->parameter[0];
-                $this->arguments_[(string) $xml['name']] = array(
+                $this->arguments_[(string) $xml['name']] = [
                     'extends' => (string) $e['extends'],
                     'rules'   => $xml
-                );
+                ];
                 continue;
             default:
                 trigger_error('Unsupported extension type \''.
                     $e->getName() ."' in extension '$extension'");
-                return;
             }
 
             $name = (string) $e['name'];
@@ -221,5 +272,29 @@ class SieveKeywordRegistry
     public function commands()
     {
         return array_keys($this->commands_);
+    }
+
+    public function validateRequires(SieveToken $sieveToken)
+    {
+        $message = "Extensions requirement are not fulfilled: \n";
+        $error = false;
+        if (count($this->requiredExtensions)) {
+            $error = true;
+            foreach ($this->requiredExtensions as $required => $by) {
+                $message .= "Extension `$required` is required by `" . implode(", ", $by) . "`.\n";
+            }
+        }
+
+        foreach ($this->forbiddenExtensions as $forbiddenExtension => $by) {
+            if (!empty($this->loadedExtensions[$forbiddenExtension])) {
+                $error = true;
+                $message .= "Extension $forbiddenExtension cannot be loaded together with " .
+                    implode(", ", $by) . ".\n";
+            }
+        }
+
+        if ($error) {
+            throw new SieveException($sieveToken, $message);
+        }
     }
 }

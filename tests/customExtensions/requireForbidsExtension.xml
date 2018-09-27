@@ -1,0 +1,9 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="forbidden" require="!spamtest">
+
+    <test name="forbidden">
+        <parameter type="string" name="value" />
+    </test>
+
+</extension>

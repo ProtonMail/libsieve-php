@@ -1,0 +1,9 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="mixed" require="!spamtest,relational,!vacation">
+
+    <test name="mixed">
+        <parameter type="string" name="value" />
+    </test>
+
+</extension>
