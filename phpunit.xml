@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="./tests/bootstrap.php"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         verbose="true"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         >
+
+    <!-- Define logging and code coverage -->
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">lib</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+      <log type="coverage-html" target="./reports/report" lowUpperBound="35" highLowerBound="70"/>
+      <!-- <log type="coverage-clover" target="./reports/coverage.xml"/> -->
+      <!-- <log type="coverage-php" target="./reports/coverage.serialized"/> -->
+      <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
+      <log type="json" target="./reports/logfile.json"/>
+      <!-- <log type="tap" target="./reports/logfile.tap"/> -->
+      <!-- <log type="junit" target="./reports/logfile.xml"/> -->
+      <log type="testdox-text" target="./reports/testdox.txt"/>
+      <!-- <log type="testdox-html" target="./reports/testdox.html"/> -->
+    </logging>
+
+    <!-- Define test suites below -->
+    <testsuites>
+        <testsuite name="Global">
+            <directory suffix="Test.php">./tests</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>
+

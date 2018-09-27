@@ -31,5 +31,11 @@
         {
             "Sieve\\": "lib/"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    },
+    "scripts": {
+        "unit": "phpunit --colors=always"
     }
 }
