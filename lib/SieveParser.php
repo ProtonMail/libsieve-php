@@ -4,6 +4,7 @@ include_once 'SieveTree.php';
 include_once 'SieveScanner.php';
 include_once 'SieveSemantics.php';
 include_once 'SieveException.php';
+include_once 'SieveKeywordRegistry.php';
 
 class SieveParser
 {
@@ -11,11 +12,11 @@ class SieveParser
     protected $script_;
     protected $tree_;
     protected $status_;
+    protected $registry_;
 
-    public function __construct($script = null)
+    public function __construct($extensions_enabled = null, $custom_extensions = [])
     {
-        if (isset($script))
-            $this->parse($script);
+        $this->registry_ = new SieveKeywordRegistry($extensions_enabled, $custom_extensions);
     }
 
     public function GetParseTree()
@@ -98,7 +99,7 @@ class SieveParser
 
             // Get and check a command token
             $token = $this->scanner_->nextToken();
-            $semantics = new SieveSemantics($token, $this->getPrevToken_($parent_id));
+            $semantics = new SieveSemantics($this->registry_, $token, $this->getPrevToken_($parent_id));
 
             // Process eventual arguments
             $this_node = $this->tree_->addChildTo($parent_id, $token);
@@ -230,7 +231,7 @@ class SieveParser
         $semantics->validateToken($token);
 
         // Get semantics for this test command
-        $this_semantics = new SieveSemantics($token, $this->getPrevToken_($parent_id));
+        $this_semantics = new SieveSemantics($this->registry_, $token, $this->getPrevToken_($parent_id));
         $this_node = $this->tree_->addChildTo($parent_id, $token);
 
         // Consume eventual argument tokens
