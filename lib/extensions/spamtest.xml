@@ -1,6 +1,6 @@
 <?xml version='1.0' standalone='yes'?>
 
-<extension name="spamtest">
+<extension name="spamtest" require="!spamtestplus">
 
 	<test name="spamtest">
 		<parameter type="comparator" occurrence="optional" />

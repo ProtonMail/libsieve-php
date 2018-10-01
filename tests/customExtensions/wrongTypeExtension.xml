@@ -1,0 +1,9 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="wrong">
+
+    <silly name="requires">
+        <retemarap type="string" name="value" />
+    </silly>
+
+</extension>

@@ -16,6 +16,9 @@ class SieveSemantics
     protected $deps_ = array();
     protected $followupToken_;
 
+    /** @var SieveKeywordRegistry the registry */
+    protected $registry_;
+
     public function __construct($registry, $token, $prevToken)
     {
         $this->registry_ = $registry;
@@ -379,10 +382,20 @@ class SieveSemantics
             throw new SieveException($token, $err);
     }
 
-    protected function setRequire_($extension)
+    /**
+     * Add a require extension.
+     *
+     * @param string $extension the extension name.
+     * @return string|null an error message.
+     */
+    protected function setRequire_(string $extension)
     {
         array_push(self::$requiredExtensions_, $extension);
-        $this->registry_->activate($extension);
+        try {
+            $this->registry_->activate($extension);
+        } catch (\Throwable $throwable) {
+            return $throwable->getMessage();
+        }
     }
 
     /**

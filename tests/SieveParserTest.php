@@ -37,28 +37,6 @@ EOS;
         static::assertEquals($sieve, $parser->GetParseTree()->GetText());
     }
 
-    private function provider($dir_name)
-    {
-        $sieves = array();
-        $directory_iterator = new DirectoryIterator(__DIR__ . '/' . $dir_name);
-        $iterator = new RegexIterator($directory_iterator, "/.*.siv/", RegexIterator::MATCH);
-        foreach ($iterator as $sieve_file) {
-            $sieves[$sieve_file->getBasename('.siv')] = array(file_get_contents($sieve_file->getPathname()));
-        }
-
-        return $sieves;
-    }
-
-    public function goodProvider()
-    {
-        return $this->provider("good");
-    }
-
-    public function badProvider()
-    {
-        return $this->provider("bad");
-    }
-
     /**
      * @dataProvider goodProvider
      */
@@ -78,6 +56,25 @@ EOS;
     {
         $parser = new SieveParser();
         $parser->parse($sieve);
+    }
+
+    private function provider($dir_name)
+    {
+        $directory_iterator = new DirectoryIterator(__DIR__ . '/' . $dir_name);
+        $iterator = new RegexIterator($directory_iterator, "/.*.siv/", RegexIterator::MATCH);
+        foreach ($iterator as $sieve_file) {
+            yield $sieve_file->getBasename('.siv') => [file_get_contents($sieve_file->getPathname())];
+        }
+    }
+
+    public function goodProvider()
+    {
+        return $this->provider("good");
+    }
+
+    public function badProvider()
+    {
+        return $this->provider("bad");
     }
 }
 

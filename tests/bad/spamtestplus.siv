@@ -1,4 +1,4 @@
-require ["spamtestplus", "relational"
+require ["spamtestplus", "spamtest", "relational"
        , "comparator-i;ascii-numeric"];
 
 if spamtest :percent :value "lt" :comparator "i;ascii-numeric" "0" {
