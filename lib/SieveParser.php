@@ -15,9 +15,17 @@ class SieveParser
     protected $status_;
     protected $registry_;
 
+    /** @var array|null the enabled extensions */
+    private $extensions_enabled;
+    /** @var array the custom extensions */
+    private $custom_extensions;
+
     public function __construct($extensions_enabled = null, $custom_extensions = [])
     {
+        // just to check the errors in the constructor
         $this->registry_ = new SieveKeywordRegistry($extensions_enabled, $custom_extensions);
+        $this->extensions_enabled = $extensions_enabled;
+        $this->custom_extensions = $custom_extensions;
     }
 
     public function GetParseTree()
@@ -70,6 +78,9 @@ class SieveParser
 
     public function parse($script)
     {
+        // we reset the registry
+        $this->registry_ = new SieveKeywordRegistry($this->extensions_enabled, $this->custom_extensions);
+
         $this->script_ = $script;
 
         $this->scanner_ = new SieveScanner($this->script_);
