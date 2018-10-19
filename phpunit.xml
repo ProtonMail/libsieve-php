@@ -20,7 +20,7 @@
     </filter>
 
     <logging>
-      <log type="coverage-html" target="./reports/report" lowUpperBound="35" highLowerBound="70"/>
+      <log type="coverage-html" target="./reports/html" lowUpperBound="50" highLowerBound="80"/>
       <!-- <log type="coverage-clover" target="./reports/coverage.xml"/> -->
       <!-- <log type="coverage-php" target="./reports/coverage.serialized"/> -->
       <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
@@ -39,4 +39,3 @@
     </testsuites>
 
 </phpunit>
-

@@ -1,9 +1,5 @@
 <?php namespace Sieve;
 
-require_once('SieveKeywordRegistry.php');
-require_once('SieveToken.php');
-require_once('SieveException.php');
-
 class SieveSemantics
 {
     protected static $requiredExtensions_ = array();
