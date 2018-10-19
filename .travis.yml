@@ -3,11 +3,11 @@ language: php
 php:
   - 7.1
   - 7.2
-  - nightly
+#  - nightly
 
 before_script:
   - travis_retry composer selfupdate
-  - travis_retry composer i --no-interaction --prefer-source --dev
+  - travis_retry composer i --no-interaction --prefer-source
 
 script:
   - vendor/bin/phpunit --coverage-clover=coverage.xml

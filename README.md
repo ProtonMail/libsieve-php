@@ -1,6 +1,10 @@
 libsieve-php
 ============
 
+[![Build Status](https://img.shields.io/travis-ci/ProtonMail/libsieve-php.svg?style=flat-square)](https://travis-ci.org/ProtonMail/libsieve-php)
+[![Coverage](https://codecov.io/gh/ProtonMail/libsieve-php/branch/master/graph/badge.svg)](https://codecov.io/gh/ProtonMail/libsieve-php)
+![License](https://img.shields.io/github/license/ProtonMail/libsieve-php.svg?style=flat-square)
+
 libsieve-php is a library to manage and modify sieve (RFC5228) scripts. It contains a parser for the sieve language (including extensions) and a client for the managesieve protocol.
 
 This project is adopted from the discontinued PHP sieve library available at https://sourceforge.net/projects/libsieve-php/.
