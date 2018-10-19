@@ -1,7 +1,5 @@
 <?php namespace Sieve;
 
-include_once('SieveDumpable.php');
-
 class SieveToken implements SieveDumpable
 {
     const Unknown          = 0x0000;

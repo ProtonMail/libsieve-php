@@ -1,7 +1,5 @@
 <?php namespace Sieve;
 
-include_once('SieveToken.php');
-
 class SieveScanner
 {
     public function __construct(&$script)

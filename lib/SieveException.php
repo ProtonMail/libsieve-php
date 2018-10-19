@@ -1,7 +1,5 @@
 <?php namespace Sieve;
 
-require_once('SieveToken.php');
-
 use Exception;
 
 class SieveException extends Exception

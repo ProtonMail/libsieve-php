@@ -1,11 +1,5 @@
 <?php namespace Sieve;
 
-include_once 'SieveTree.php';
-include_once 'SieveScanner.php';
-include_once 'SieveSemantics.php';
-include_once 'SieveException.php';
-include_once 'SieveKeywordRegistry.php';
-
 class SieveParser
 {
     /** @var SieveScanner the scanner */

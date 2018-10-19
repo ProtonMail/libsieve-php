@@ -2,6 +2,6 @@
 
 interface SieveDumpable
 {
-	function dump();
-	function text();
+    function dump();
+    function text();
 }
