@@ -5,12 +5,10 @@
     "type": "library",
     "license": "GPLv3",
     "homepage": "https://sourceforge.net/projects/libsieve-php/",
-    "support":
-    {
+    "support": {
         "issues": "https://github.com/ProtonMail/libsieve-php/issues"
     },
-    "authors":
-    [
+    "authors": [
         {
             "name": "Heiko Hund",
             "homepage": "https://sourceforge.net/u/heikoh/profile/"
@@ -21,14 +19,12 @@
             "homepage": "https://protonmail.com"
         }
     ],
-    "require":
-    {
-        "php": ">=7.1.0"
+    "require": {
+        "php": ">=7.1.0",
+        "ext-mbstring": "*"
     },
-    "autoload":
-    {
-        "psr-4":
-        {
+    "autoload": {
+        "psr-4": {
             "Sieve\\": "lib/"
         }
     },
@@ -36,6 +32,6 @@
         "phpunit/phpunit": "^7"
     },
     "scripts": {
-        "unit": "phpunit --colors=always"
+        "unit": "phpunit --testdox --colors=always"
     }
 }
