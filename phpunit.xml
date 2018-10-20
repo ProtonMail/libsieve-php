@@ -20,15 +20,12 @@
     </filter>
 
     <logging>
-      <log type="coverage-html" target="./reports/html" lowUpperBound="50" highLowerBound="80"/>
-      <!-- <log type="coverage-clover" target="./reports/coverage.xml"/> -->
-      <!-- <log type="coverage-php" target="./reports/coverage.serialized"/> -->
-      <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
-      <log type="json" target="./reports/logfile.json"/>
-      <!-- <log type="tap" target="./reports/logfile.tap"/> -->
-      <!-- <log type="junit" target="./reports/logfile.xml"/> -->
-      <log type="testdox-text" target="./reports/testdox.txt"/>
-      <!-- <log type="testdox-html" target="./reports/testdox.html"/> -->
+          <log type="coverage-html" target="./reports/html" lowUpperBound="50" highLowerBound="80"/>
+          <!-- <log type="coverage-clover" target="./reports/coverage.xml"/> -->
+          <!-- <log type="coverage-php" target="./reports/coverage.serialized"/> -->
+          <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
+          <log type="json" target="./reports/logfile.json"/>
+          <log type="testdox-text" target="./reports/testdox.txt"/>
     </logging>
 
     <!-- Define test suites below -->

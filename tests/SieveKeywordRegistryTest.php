@@ -1,6 +1,5 @@
 <?php
 
-
 use PHPUnit\Framework\TestCase;
 use Sieve\SieveParser;
 
@@ -9,8 +8,6 @@ class SieveKeywordRegistryTest extends TestCase
     /**
      * Checks that the extension cannot be loaded if it forbids usage of another already loaded extension.
      *
-     * @throws \Sieve\SieveException
-     * @expectedException \Sieve\SieveException
      */
     public function testForbiddenExtensionLoadedBefore()
     {
@@ -20,7 +17,14 @@ class SieveKeywordRegistryTest extends TestCase
 require ["spamtest", "forbidden"];
 EOS;
 
-        $parser->parse($sieve);
+        try {
+            $parser->parse($sieve);
+        } catch (\Sieve\SieveException $e) {
+            $this->assertSame(1, $e->getLineNo());
+
+            $this->expectException(\Sieve\SieveException::class);
+            throw $e;
+        }
     }
 
     /**
@@ -74,7 +78,7 @@ EOS;
      * @throws \Sieve\SieveException
      * @dataProvider mixExtensionProvider
      */
-    public function testMixExtension(string $sieve_extensions, $exception = null)
+    public function testMixExtension(string $sieve_extensions, ?string $exception = null)
     {
         $path = __DIR__ . "/customExtensions/requireMixedExtension.xml";
         $parser = new SieveParser(null, [$path]);
