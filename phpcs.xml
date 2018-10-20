@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ruleset name="ProtonLabs PHP CodeSniffer Standard">
+    <arg name="colors"/>
+
+    <!-- Proton Coding Standard – https://github.com/ProtonMail/php-coding-standard -->
+    <rule ref="vendor/protonlabs/php-coding-standard/Proton/ruleset.xml">
+        <!-- sniffs to exclude -->
+    </rule>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+</ruleset>

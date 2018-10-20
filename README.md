@@ -2,17 +2,17 @@ libsieve-php
 ============
 
 [![Build Status](https://img.shields.io/travis-ci/ProtonMail/libsieve-php.svg?style=flat-square)](https://travis-ci.org/ProtonMail/libsieve-php)
-[![Coverage](https://codecov.io/gh/ProtonMail/libsieve-php/branch/master/graph/badge.svg)](https://codecov.io/gh/ProtonMail/libsieve-php)
-![License](https://img.shields.io/github/license/ProtonMail/libsieve-php.svg?style=flat-square)
+[![Coverage](https://img.shields.io/codecov/c/github/ProtonMail/libsieve-php.svg?style=flat-square)](https://codecov.io/gh/ProtonMail/libsieve-php)
+[![License](https://img.shields.io/github/license/ProtonMail/libsieve-php.svg?style=flat-square)](https://github.com/ProtonMail/libsieve-php/blob/master/LICENSE)
 
 libsieve-php is a library to manage and modify sieve (RFC5228) scripts. It contains a parser for the sieve language (including extensions) and a client for the managesieve protocol.
 
-This project is adopted from the discontinued PHP sieve library available at https://sourceforge.net/projects/libsieve-php/.
+This project is adopted from the discontinued PHP sieve library available at https://sourceforge.net/projects/libsieve-php.
 
 Changes from the RFC
-====================
+--------------------
 
  - The `date` and the `currentdate` both allow for `zone` parameter any string to be passed.
    This allows the user to enter zone names like `Europe/Zurich` instead of `+0100`. 
-    The reason we allow this is because offsets like `+0100` don't encode information about the 
-    daylight saving time, which is often needed.
+   The reason we allow this is because offsets like `+0100` don't encode information about the 
+   daylight saving time, which is often needed.
