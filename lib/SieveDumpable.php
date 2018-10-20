@@ -1,7 +1,9 @@
-<?php namespace Sieve;
+<?php
+
+namespace Sieve;
 
 interface SieveDumpable
 {
-    function dump();
-    function text();
+    public function dump();
+    public function text();
 }

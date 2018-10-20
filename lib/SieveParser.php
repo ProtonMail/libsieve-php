@@ -1,4 +1,6 @@
-<?php namespace Sieve;
+<?php
+
+namespace Sieve;
 
 class SieveParser
 {
@@ -41,15 +43,16 @@ class SieveParser
     {
         $childs = $this->tree_->getChilds($parent_id);
 
-        for ($i = count($childs); $i > 0; --$i)
-        {
-            $prev = $this->tree_->getNode($childs[$i-1]);
-            if ($prev->is(SieveToken::Comment|SieveToken::Whitespace))
+        for ($i = count($childs); $i > 0; --$i) {
+            $prev = $this->tree_->getNode($childs[$i - 1]);
+            if ($prev->is(SieveToken::Comment | SieveToken::Whitespace)) {
                 continue;
+            }
 
             // use command owning a block or list instead of previous
-            if ($prev->is(SieveToken::BlockStart|SieveToken::Comma|SieveToken::LeftParenthesis))
+            if ($prev->is(SieveToken::BlockStart | SieveToken::Comma | SieveToken::LeftParenthesis)) {
                 $prev = $this->tree_->getNode($parent_id);
+            }
 
             return $prev;
         }
@@ -81,9 +84,9 @@ class SieveParser
 
         // Define what happens with passthrough tokens like whitespacs and comments
         $this->scanner_->setPassthroughFunc(
-            array(
-                $this, 'passthroughWhitespaceComment'
-            )
+            [
+                $this, 'passthroughWhitespaceComment',
+            ]
         );
 
         $this->tree_ = new SieveTree('tree');
@@ -99,10 +102,10 @@ class SieveParser
     protected function commands_($parent_id)
     {
         $token = null;
-        while (true)
-        {
-            if (!$this->scanner_->nextTokenIs(SieveToken::Identifier))
+        while (true) {
+            if (!$this->scanner_->nextTokenIs(SieveToken::Identifier)) {
                 break;
+            }
 
             // Get and check a command token
             $token = $this->scanner_->nextToken();
@@ -113,13 +116,11 @@ class SieveParser
             $this->arguments_($this_node, $semantics);
 
             $token = $this->scanner_->nextToken();
-            if (!$token->is(SieveToken::Semicolon))
-            {
+            if (!$token->is(SieveToken::Semicolon)) {
                 // TODO: check if/when semcheck is needed here
                 $semantics->validateToken($token);
 
-                if ($token->is(SieveToken::BlockStart))
-                {
+                if ($token->is(SieveToken::BlockStart)) {
                     $this->tree_->addChildTo($this_node, $token);
                     $this->block_($this_node, $semantics);
                     continue;
@@ -138,65 +139,58 @@ class SieveParser
 
     protected function arguments_($parent_id, &$semantics)
     {
-        while (true)
-        {
-            if ($this->scanner_->nextTokenIs(SieveToken::Number|SieveToken::Tag))
-            {
+        while (true) {
+            if ($this->scanner_->nextTokenIs(SieveToken::Number | SieveToken::Tag)) {
                 // Check if semantics allow a number or tag
                 $token = $this->scanner_->nextToken();
                 $semantics->validateToken($token);
                 $this->tree_->addChildTo($parent_id, $token);
-            }
-            else if ($this->scanner_->nextTokenIs(SieveToken::StringList))
-            {
+            } elseif ($this->scanner_->nextTokenIs(SieveToken::StringList)) {
                 $this->stringlist_($parent_id, $semantics);
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
 
-        if ($this->scanner_->nextTokenIs(SieveToken::TestList))
-        {
+        if ($this->scanner_->nextTokenIs(SieveToken::TestList)) {
             $this->testlist_($parent_id, $semantics);
         }
     }
 
     protected function stringlist_($parent_id, &$semantics)
     {
-        if (!$this->scanner_->nextTokenIs(SieveToken::LeftBracket))
-        {
+        if (!$this->scanner_->nextTokenIs(SieveToken::LeftBracket)) {
             $this->string_($parent_id, $semantics);
+
             return;
         }
 
         $token = $this->scanner_->nextToken();
         $semantics->startStringList($token);
         $this->tree_->addChildTo($parent_id, $token);
-        
-        if($this->scanner_->nextTokenIs(SieveToken::RightBracket)) {
+
+        if ($this->scanner_->nextTokenIs(SieveToken::RightBracket)) {
             //allow empty lists
             $token = $this->scanner_->nextToken();
             $this->tree_->addChildTo($parent_id, $token);
             $semantics->endStringList();
+
             return;
         }
 
-        do
-        {
+        do {
             $this->string_($parent_id, $semantics);
             $token = $this->scanner_->nextToken();
 
-            if (!$token->is(SieveToken::Comma|SieveToken::RightBracket))
-                throw new SieveException($token, array(SieveToken::Comma, SieveToken::RightBracket));
-
-            if ($token->is(SieveToken::Comma))
+            if (!$token->is(SieveToken::Comma | SieveToken::RightBracket)) {
+                throw new SieveException($token, [SieveToken::Comma, SieveToken::RightBracket]);
+            }
+            if ($token->is(SieveToken::Comma)) {
                 $semantics->continueStringList();
+            }
 
             $this->tree_->addChildTo($parent_id, $token);
-        }
-        while (!$token->is(SieveToken::RightBracket));
+        } while (!$token->is(SieveToken::RightBracket));
 
         $semantics->endStringList();
     }
@@ -210,9 +204,9 @@ class SieveParser
 
     protected function testlist_($parent_id, &$semantics)
     {
-        if (!$this->scanner_->nextTokenIs(SieveToken::LeftParenthesis))
-        {
+        if (!$this->scanner_->nextTokenIs(SieveToken::LeftParenthesis)) {
             $this->test_($parent_id, $semantics);
+
             return;
         }
 
@@ -220,18 +214,15 @@ class SieveParser
         $semantics->validateToken($token);
         $this->tree_->addChildTo($parent_id, $token);
 
-        do
-        {
+        do {
             $this->test_($parent_id, $semantics);
 
             $token = $this->scanner_->nextToken();
-            if (!$token->is(SieveToken::Comma|SieveToken::RightParenthesis))
-            {
-                throw new SieveException($token, array(SieveToken::Comma, SieveToken::RightParenthesis));
+            if (!$token->is(SieveToken::Comma | SieveToken::RightParenthesis)) {
+                throw new SieveException($token, [SieveToken::Comma, SieveToken::RightParenthesis]);
             }
             $this->tree_->addChildTo($parent_id, $token);
-        }
-        while (!$token->is(SieveToken::RightParenthesis));
+        } while (!$token->is(SieveToken::RightParenthesis));
     }
 
     protected function test_($parent_id, &$semantics)
@@ -257,8 +248,7 @@ class SieveParser
         $this->commands_($parent_id, $semantics);
 
         $token = $this->scanner_->nextToken();
-        if (!$token->is(SieveToken::BlockEnd))
-        {
+        if (!$token->is(SieveToken::BlockEnd)) {
             throw new SieveException($token, SieveToken::BlockEnd);
         }
         $this->tree_->addChildTo($parent_id, $token);

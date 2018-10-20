@@ -1,4 +1,6 @@
-<?php namespace Sieve;
+<?php
+
+namespace Sieve;
 
 class SieveScript
 {

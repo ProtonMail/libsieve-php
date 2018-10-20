@@ -1,4 +1,6 @@
-<?php namespace Sieve;
+<?php
+
+namespace Sieve;
 
 class SieveToken implements SieveDumpable
 {
@@ -30,16 +32,18 @@ class SieveToken implements SieveDumpable
     public $text;
     public $line;
 
+    protected static $tr_ = ["\r" => '\r', "\n" => '\n', "\t" => '\t'];
+
     public function __construct($type, $text, $line)
     {
         $this->text = $text;
         $this->type = $type;
-        $this->line = intval($line);
+        $this->line = (int) $line;
     }
 
     public function dump()
     {
-        return '<'. SieveToken::escape($this->text) .'> type:'. SieveToken::typeString($this->type) .' line:'. $this->line;
+        return '<' . SieveToken::escape($this->text) . '> type:' . SieveToken::typeString($this->type) . ' line:' . $this->line;
     }
 
     public function text()
@@ -49,36 +53,53 @@ class SieveToken implements SieveDumpable
 
     public function is($type)
     {
-        return (bool)($this->type & $type);
+        return (bool) ($this->type & $type);
     }
 
     public static function typeString($type)
     {
-        switch ($type)
-        {
-        case SieveToken::Identifier: return 'identifier';
-        case SieveToken::Whitespace: return 'whitespace';
-        case SieveToken::QuotedString: return 'quoted string';
-        case SieveToken::Tag: return 'tag';
-        case SieveToken::Semicolon: return 'semicolon';
-        case SieveToken::LeftBracket: return 'left bracket';
-        case SieveToken::RightBracket: return 'right bracket';
-        case SieveToken::BlockStart: return 'block start';
-        case SieveToken::BlockEnd: return 'block end';
-        case SieveToken::LeftParenthesis: return 'left parenthesis';
-        case SieveToken::RightParenthesis: return 'right parenthesis';
-        case SieveToken::Comma: return 'comma';
-        case SieveToken::Number: return 'number';
-        case SieveToken::Comment: return 'comment';
-        case SieveToken::MultilineString: return 'multiline string';
-        case SieveToken::ScriptEnd: return 'script end';
-        case SieveToken::String: return 'string';
-        case SieveToken::StringList: return 'string list';
-        default: return 'unknown token';
+        switch ($type) {
+            case SieveToken::Identifier:
+                return 'identifier';
+            case SieveToken::Whitespace:
+                return 'whitespace';
+            case SieveToken::QuotedString:
+                return 'quoted string';
+            case SieveToken::Tag:
+                return 'tag';
+            case SieveToken::Semicolon:
+                return 'semicolon';
+            case SieveToken::LeftBracket:
+                return 'left bracket';
+            case SieveToken::RightBracket:
+                return 'right bracket';
+            case SieveToken::BlockStart:
+                return 'block start';
+            case SieveToken::BlockEnd:
+                return 'block end';
+            case SieveToken::LeftParenthesis:
+                return 'left parenthesis';
+            case SieveToken::RightParenthesis:
+                return 'right parenthesis';
+            case SieveToken::Comma:
+                return 'comma';
+            case SieveToken::Number:
+                return 'number';
+            case SieveToken::Comment:
+                return 'comment';
+            case SieveToken::MultilineString:
+                return 'multiline string';
+            case SieveToken::ScriptEnd:
+                return 'script end';
+            case SieveToken::String:
+                return 'string';
+            case SieveToken::StringList:
+                return 'string list';
+            default:
+                return 'unknown token';
         }
     }
 
-    protected static $tr_ = array("\r" => '\r', "\n" => '\n', "\t" => '\t');
     public static function escape($val)
     {
         return strtr($val, self::$tr_);

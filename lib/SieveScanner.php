@@ -1,19 +1,23 @@
-<?php namespace Sieve;
+<?php
+
+namespace Sieve;
 
 class SieveScanner
 {
     public function __construct(&$script)
     {
-        if ($script === null)
+        if ($script === null) {
             return;
+        }
 
         $this->tokenize($script);
     }
 
     public function setPassthroughFunc($callback)
     {
-        if ($callback == null || is_callable($callback))
+        if ($callback == null || is_callable($callback)) {
             $this->ptFn_ = $callback;
+        }
     }
 
     public function tokenize(&$script)
@@ -25,7 +29,6 @@ class SieveScanner
 
         $unprocessedScript = $script;
 
-
         //create one regex to find the right match
         //avoids looping over all possible tokens: increases performance
         $nameToType = [];
@@ -35,16 +38,14 @@ class SieveScanner
 
         foreach ($this->tokenMatch_ as $type => $subregex) {
             $nameToType[chr($i)] = $type;
-            $regex[] = "(?P<". chr($i) . ">^$subregex)";
+            $regex[] = '(?P<' . chr($i) . ">^$subregex)";
             $i++;
         }
 
         $regex = '/' . join('|', $regex) . '/';
 
-        while ($pos < $scriptLength)
-        {
+        while ($pos < $scriptLength) {
             if (preg_match($regex, $unprocessedScript, $match)) {
-
                 // only keep the group that match and we only want matches with group names
                 // we can use the group name to find the token type using nameToType
                 $filterMatch = array_filter(array_filter($match), 'is_string', ARRAY_FILTER_USE_KEY);
@@ -57,8 +58,9 @@ class SieveScanner
                 $token = new SieveToken($type, $currentMatch, $line);
                 $this->tokens_[] = $token;
 
-                if ($type == SieveToken::Unknown)
+                if ($type == SieveToken::Unknown) {
                     return;
+                }
 
                 // just remove the part that we parsed: don't extract the new substring using script length
                 // as mb_strlen is \theta(pos)  (it's linear in the position)
@@ -69,9 +71,9 @@ class SieveScanner
                 $line += mb_substr_count($currentMatch, "\n");
             } else {
                 $this->tokens_[] = new SieveToken(SieveToken::Unknown, '', $line);
+
                 return;
             }
-
         }
 
         $this->tokens_[] = new SieveToken(SieveToken::ScriptEnd, '', $line);
@@ -87,7 +89,7 @@ class SieveScanner
         $offset = 0;
         do {
             $next = $this->tokens_[$this->tokenPos_ + $offset++];
-        } while ($next->is(SieveToken::Comment|SieveToken::Whitespace));
+        } while ($next->is(SieveToken::Comment | SieveToken::Whitespace));
 
         return $next;
     }
@@ -96,10 +98,10 @@ class SieveScanner
     {
         $token = $this->tokens_[$this->tokenPos_++];
 
-        while ($token->is(SieveToken::Comment|SieveToken::Whitespace))
-        {
-            if ($this->ptFn_ != null)
+        while ($token->is(SieveToken::Comment | SieveToken::Whitespace)) {
+            if ($this->ptFn_ != null) {
                 call_user_func($this->ptFn_, $token);
+            }
 
             $token = $this->tokens_[$this->tokenPos_++];
         }
@@ -109,8 +111,8 @@ class SieveScanner
 
     protected $ptFn_ = null;
     protected $tokenPos_ = 0;
-    protected $tokens_ = array();
-    protected $tokenMatch_ = array (
+    protected $tokens_ = [];
+    protected $tokenMatch_ = [
         SieveToken::LeftBracket       =>  '\[',
         SieveToken::RightBracket      =>  '\]',
         SieveToken::BlockStart        =>  '\{',
@@ -138,6 +140,6 @@ class SieveScanner
         SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
         SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
         SieveToken::Identifier        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        SieveToken::Unknown           =>  '[^ \r\n\t]+'
-    );
+        SieveToken::Unknown           =>  '[^ \r\n\t]+',
+    ];
 }
