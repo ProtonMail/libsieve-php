@@ -17,6 +17,16 @@
             "name": "Martin Zeman",
             "email": "martin@protonmail.com",
             "homepage": "https://protonmail.com"
+        },
+        {
+            "name": "Kay Lukas",
+            "email": "kay@pm.me",
+            "homepage": "https://protonmail.com"
+        },
+        {
+            "name": "Thomas Hareau",
+            "email": "thomas.hareau@protonmail.com",
+            "homepage": "https://thomas.hareau.eu"
         }
     ],
     "require": {
