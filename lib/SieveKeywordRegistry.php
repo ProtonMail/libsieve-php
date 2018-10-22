@@ -152,10 +152,10 @@ class SieveKeywordRegistry
                 case 'tagged-argument':
                     $xml = $e->parameter[0];
                     $this->arguments_[(string) $xml['name']] = [
-                    'extends' => (string) $e['extends'],
-                    'rules' => $xml,
+                        'extends' => (string) $e['extends'],
+                        'rules' => $xml,
                     ];
-                    continue;
+                    break;
                 default:
                     trigger_error('Unsupported extension type \'' .
                     $e->getName() . "' in extension '$extension'");
@@ -163,7 +163,7 @@ class SieveKeywordRegistry
 
             $name = (string) $e['name'];
             if (!isset($type[$name]) ||
-                (string) $e['overrides'] == 'true') {
+                (string) $e['overrides'] === 'true') {
                 $type[$name] = $e->children();
             }
         }
