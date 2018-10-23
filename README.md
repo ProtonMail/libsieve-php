@@ -15,7 +15,7 @@ This project is adopted from the discontinued PHP sieve library available at htt
    The reason we allow this is because offsets like `+0100` don't encode information about the
    daylight saving time, which is often needed.
 
-## Usage examples:
+## Usage examples
 
 The libsieve parses a sieve script into a tree. This tree can then be used to interpret its meaning.
 
@@ -24,6 +24,7 @@ Two example will be provided: one basic and one more complex.
 In this first example, we will check if a specific extension was loaded through a require node:
 
 ```php
+<?php
 use Sieve\SieveParser;
 
 class ExtensionCheckExample
@@ -45,7 +46,7 @@ class ExtensionCheckExample
             throw new Exception("The provided sieve script is invalid!");
         }
 
-        // we store the tree, because it contains all the informations.
+        // we store the tree, because it contains all the information.
         $this->tree = $parser->GetParseTree();
     }
 
@@ -115,7 +116,6 @@ the method `$tree->dump()`).
 <?php
 use Sieve\SieveParser;
 
-
 class UsageExample
 {
     /** @var \Sieve\SieveTree the tree, obtained from the SieveParser */
@@ -135,7 +135,7 @@ class UsageExample
             throw new \Exception("The provided sieve script is invalid!");
         }
 
-        // we store the tree, because it contains all the informations.
+        // we store the tree, because it contains all the information.
         $this->tree = $parser->GetParseTree();
     }
 
@@ -213,5 +213,4 @@ $sieve = file_get_contents(__DIR__ . '/tests/good/currentdate.siv');
 
 $parser = new UsageExample($sieve);
 $parser->display();
-
 ```
