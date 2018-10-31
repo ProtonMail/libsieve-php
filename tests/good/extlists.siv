@@ -1,0 +1,9 @@
+require "extlists";
+
+# Submission from list members is sent to all members
+if allof(
+    valid_ext_list "tag:example.com,2010-05-28:mylist",
+    header :list "from" "tag:example.com,2010-05-28:mylist"
+) {
+   redirect :list "tag:example.com,2010-05-28:mylist";
+}
