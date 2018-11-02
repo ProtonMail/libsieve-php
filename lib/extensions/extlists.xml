@@ -1,0 +1,15 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="extlists">
+
+    <matchtype name="list"/>
+    <test name="valid_ext_list">
+        <parameter type="stringlist" name="ext-list-names" />
+    </test>
+    <tagged-argument extends="redirect">
+        <parameter type="tag" name="list" regex="list" occurrence="optional">
+            <parameter type="" name="ext-list-name" />
+        </parameter>
+    </tagged-argument>
+
+</extension>
