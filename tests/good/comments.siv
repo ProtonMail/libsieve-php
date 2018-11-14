@@ -1,3 +1,10 @@
 # comment
 
 /* comment */
+
+if true {
+    keep;
+    # comment
+}
+
+# comment

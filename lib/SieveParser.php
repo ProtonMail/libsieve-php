@@ -93,7 +93,7 @@ class SieveParser
 
         $this->commands_($this->tree_->getRoot());
 
-        if (!$this->scanner_->nextTokenIs(SieveToken::ScriptEnd)) {
+        if (!$this->scanner_->currentTokenIs(SieveToken::ScriptEnd)) {
             $token = $this->scanner_->nextToken();
             throw new SieveException($token, SieveToken::ScriptEnd);
         }
@@ -133,6 +133,7 @@ class SieveParser
             $this->tree_->addChildTo($this_node, $token);
         }
         if ($this->scanner_->nextTokenIs(SieveToken::ScriptEnd)) {
+            $this->scanner_->nextToken(); // attach comment to ScriptEnd
             $this->done();
         }
     }
@@ -256,6 +257,6 @@ class SieveParser
 
     protected function done()
     {
-        $this->registry_->validateRequires($this->scanner_->peekNextToken());
+        $this->registry_->validateRequires($this->scanner_->getCurrentToken());
     }
 }
