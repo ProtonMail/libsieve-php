@@ -79,9 +79,20 @@ class SieveScanner
         $this->tokens_[] = new SieveToken(SieveToken::ScriptEnd, '', $line);
     }
 
+    public function getCurrentToken(): ?SieveToken
+    {
+        return $this->tokens_[$this->tokenPos_ - 1] ?? null;
+    }
+
     public function nextTokenIs($type)
     {
         return $this->peekNextToken()->is($type);
+    }
+
+    public function currentTokenIs($type)
+    {
+        $current_token = $this->getCurrentToken();
+        return isset($current_token) ? $current_token->is($type) : false;
     }
 
     public function peekNextToken()
@@ -99,8 +110,8 @@ class SieveScanner
         $token = $this->tokens_[$this->tokenPos_++];
 
         while ($token->is(SieveToken::Comment | SieveToken::Whitespace)) {
-            if ($this->ptFn_ != null) {
-                call_user_func($this->ptFn_, $token);
+            if (isset($this->ptFn_)) {
+                ($this->ptFn_)($token);
             }
 
             $token = $this->tokens_[$this->tokenPos_++];
