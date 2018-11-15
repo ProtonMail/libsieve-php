@@ -64,9 +64,27 @@ class SieveParser
     /*******************************************************************************
      * methods for recursive descent start below
      */
-    public function passthroughWhitespaceComment($token)
+    public function passthroughWhitespaceComment(SieveToken $token)
     {
-        $this->tree_->addChild($token);
+        if ($token->is(SieveToken::Whitespace)) {
+            $this->tree_->addChild($token);
+        } elseif ($token->is(SieveToken::Comment)) {
+            /** @var ?SieveToken $parent */
+
+            $parent_id = $this->tree_->getLastId();
+            do {
+                $parent_id = $this->tree_->getParent($parent_id) ?? 0;
+                $parent = $this->tree_->getNode($parent_id);
+            } while (isset($parent) && $parent->is(
+                SieveToken::Whitespace | SieveToken::Comment | SieveToken::BlockEnd | SieveToken::Semicolon
+            ));
+
+            if (isset($parent)) {
+                $this->tree_->addChildTo($parent_id, $token);
+            } else {
+                $this->tree_->addChild($token);
+            }
+        }
     }
 
     public function passthroughFunction($token)

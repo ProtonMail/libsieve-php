@@ -16,7 +16,9 @@ if header :value     /* ignored */  "lt" ["x-priority"] ["3"]
     /* the priority is low */
     stop
     ;
+    # banana
 }
+/*  where are you */
 vacation :mime 
 "Content-Type: text/html
 I'm out of office, please contact Joan Doe instead.

@@ -63,7 +63,7 @@ class SieveTree
         return $this->childs_[$node_id];
     }
 
-    public function getNode($node_id)
+    public function getNode($node_id): ?SieveToken
     {
         if ($node_id == 0 || !is_int($node_id) || !isset($this->nodes_[$node_id])) {
             return null;
@@ -72,6 +72,15 @@ class SieveTree
         return $this->nodes_[$node_id];
     }
 
+    public function getParent(int $node_id)
+    {
+        return $this->parents_[$node_id];
+    }
+
+    public function getLastId()
+    {
+        return $this->max_id_;
+    }
     public function dump()
     {
         $this->dump_ = $this->nodes_[$this->getRoot()] . "\n";
