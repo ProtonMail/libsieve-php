@@ -7,6 +7,7 @@ class SieveParser
     /** @var SieveScanner the scanner */
     protected $scanner_;
     protected $script_;
+    /** @var SieveTree */
     protected $tree_;
     protected $status_;
     protected $registry_;
