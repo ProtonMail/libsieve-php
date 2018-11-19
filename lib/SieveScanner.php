@@ -48,7 +48,13 @@ class SieveScanner
             if (preg_match($regex, $unprocessedScript, $match)) {
                 // only keep the group that match and we only want matches with group names
                 // we can use the group name to find the token type using nameToType
-                $filterMatch = array_filter(array_filter($match), 'is_string', ARRAY_FILTER_USE_KEY);
+                $filterMatch = array_filter(
+                    $match,
+                    function ($value, $key) {
+                        return is_string($key) && isset($value) && $value !== "";
+                    },
+                    ARRAY_FILTER_USE_BOTH
+                );
 
                 // the first element in filterMatch will contain the matched group and the key will be the name
                 $type = $nameToType[key($filterMatch)];

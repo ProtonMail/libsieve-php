@@ -4,6 +4,10 @@ if size :over 10M {
 	keep;
 } elsif size :over 400G {
 	keep;
+} elsif size :over 0 {
+ 	keep;
+} elsif size :under 0 {
+ 	keep;
 } elsif size :under 1 {
 	keep;
 }

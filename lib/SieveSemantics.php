@@ -525,7 +525,7 @@ class SieveSemantics
             }
 
             if (preg_match($regex, $token->text, $match)) {
-                $text = ($match['one'] ? $match['one'] : $match['two']);
+                $text = (isset($match['one']) && $match['one'] !== '' ? $match['one'] : $match['two']);
 
                 // Add argument(s) that may now appear after this one
                 if (isset($arg['subArgs'])) {
