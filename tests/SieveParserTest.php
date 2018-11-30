@@ -36,7 +36,7 @@ EOS;
         $parser = new SieveParser();
         $parser->parse($sieve);
 
-        static::assertEquals($sieve, $parser->GetParseTree()->GetText());
+        static::assertEquals($sieve, $parser->getParseTree()->GetText());
     }
 
     /**
@@ -47,7 +47,7 @@ EOS;
         $parser = new SieveParser();
         $parser->parse($sieve);
         // it should not raise an exception
-        static::assertEquals($sieve, $parser->GetParseTree()->GetText());
+        static::assertEquals($sieve, $parser->getParseTree()->GetText());
     }
 
     /**

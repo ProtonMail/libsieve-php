@@ -4,6 +4,11 @@ namespace Sieve;
 
 class SieveScanner
 {
+    /**
+     * SieveScanner constructor.
+     *
+     * @param $script
+     */
     public function __construct(&$script)
     {
         if ($script === null) {
@@ -13,14 +18,24 @@ class SieveScanner
         $this->tokenize($script);
     }
 
-    public function setPassthroughFunc($callback)
+    /**
+     * Set passthrough func.
+     *
+     * @param $callback
+     */
+    public function setPassthroughFunc(callable $callback): void
     {
-        if ($callback == null || is_callable($callback)) {
-            $this->ptFn_ = $callback;
+        if ($callback === null || is_callable($callback)) {
+            $this->ptFn = $callback;
         }
     }
 
-    public function tokenize(&$script)
+    /**
+     * Tokenizes a script.
+     *
+     * @param $script
+     */
+    public function tokenize(string &$script): void
     {
         $pos = 0;
         $line = 1;
@@ -33,10 +48,10 @@ class SieveScanner
         //avoids looping over all possible tokens: increases performance
         $nameToType = [];
         $regex = [];
-        // chr(65) == 'A'
+        // chr(65) === 'A'
         $i = 65;
 
-        foreach ($this->tokenMatch_ as $type => $subregex) {
+        foreach ($this->tokenMatch as $type => $subregex) {
             $nameToType[chr($i)] = $type;
             $regex[] = '(?P<' . chr($i) . ">^$subregex)";
             $i++;
@@ -62,9 +77,9 @@ class SieveScanner
 
                 //create the token
                 $token = new SieveToken($type, $currentMatch, $line);
-                $this->tokens_[] = $token;
+                $this->tokens[] = $token;
 
-                if ($type == SieveToken::Unknown) {
+                if ($type === SieveToken::UNKNOWN) {
                     return;
                 }
 
@@ -76,70 +91,97 @@ class SieveScanner
                 $pos += $matchLength;
                 $line += mb_substr_count($currentMatch, "\n");
             } else {
-                $this->tokens_[] = new SieveToken(SieveToken::Unknown, '', $line);
+                $this->tokens[] = new SieveToken(SieveToken::UNKNOWN, '', $line);
 
                 return;
             }
         }
 
-        $this->tokens_[] = new SieveToken(SieveToken::ScriptEnd, '', $line);
+        $this->tokens[] = new SieveToken(SieveToken::SCRIPT_END, '', $line);
     }
 
+    /**
+     * Get current token.
+     *
+     * @return SieveToken|null
+     */
     public function getCurrentToken(): ?SieveToken
     {
-        return $this->tokens_[$this->tokenPos_ - 1] ?? null;
+        return $this->tokens[$this->tokenPos - 1] ?? null;
     }
 
-    public function nextTokenIs($type)
+    /**
+     * Check if next token is of given type.
+     *
+     * @param int $type
+     * @return bool
+     */
+    public function nextTokenIs(int $type): bool
     {
         return $this->peekNextToken()->is($type);
     }
 
-    public function currentTokenIs($type)
+    /**
+     * Check is current token is of type.
+     *
+     * @param $type
+     * @return bool
+     */
+    public function currentTokenIs($type): bool
     {
         $current_token = $this->getCurrentToken();
         return isset($current_token) ? $current_token->is($type) : false;
     }
 
-    public function peekNextToken()
+    /**
+     * Peek next token. (not moving the position)
+     *
+     * @return SieveToken
+     */
+    public function peekNextToken(): SieveToken
     {
         $offset = 0;
         do {
-            $next = $this->tokens_[$this->tokenPos_ + $offset++];
-        } while ($next->is(SieveToken::Comment | SieveToken::Whitespace));
+            $next = $this->tokens[$this->tokenPos + $offset++];
+        } while ($next->is(SieveToken::COMMENT | SieveToken::WHITESPACE));
 
         return $next;
     }
 
-    public function nextToken()
+    /**
+     * Get next token. (and moving the position)
+     *
+     * @return SieveToken
+     */
+    public function nextToken(): SieveToken
     {
-        $token = $this->tokens_[$this->tokenPos_++];
+        $token = $this->tokens[$this->tokenPos++];
 
-        while ($token->is(SieveToken::Comment | SieveToken::Whitespace)) {
-            if (isset($this->ptFn_)) {
-                ($this->ptFn_)($token);
+        while ($token->is(SieveToken::COMMENT | SieveToken::WHITESPACE)) {
+            if (isset($this->ptFn)) {
+                ($this->ptFn)($token);
             }
 
-            $token = $this->tokens_[$this->tokenPos_++];
+            $token = $this->tokens[$this->tokenPos++];
         }
 
         return $token;
     }
 
-    protected $ptFn_ = null;
-    protected $tokenPos_ = 0;
-    protected $tokens_ = [];
-    protected $tokenMatch_ = [
-        SieveToken::LeftBracket       =>  '\[',
-        SieveToken::RightBracket      =>  '\]',
-        SieveToken::BlockStart        =>  '\{',
-        SieveToken::BlockEnd          =>  '\}',
-        SieveToken::LeftParenthesis   =>  '\(',
-        SieveToken::RightParenthesis  =>  '\)',
-        SieveToken::Comma             =>  ',',
-        SieveToken::Semicolon         =>  ';',
-        SieveToken::Whitespace        =>  '[ \r\n\t]+',
-        SieveToken::Tag               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
+    protected $ptFn = null;
+    protected $tokenPos = 0;
+    protected $tokens = [];
+    protected $tokenMatch = [
+        SieveToken::LEFT_BRACKET       =>  '\[',
+        SieveToken::RIGHT_BRACKET      =>  '\]',
+        SieveToken::BLOCK_START        =>  '\{',
+        SieveToken::BLOCK_END          =>  '\}',
+        SieveToken::LEFT_PARENTHESIS   =>  '\(',
+        SieveToken::RIGHT_PARENTHESIS  =>  '\)',
+        SieveToken::COMMA             =>  ',',
+        SieveToken::SEMICOLON         =>  ';',
+        SieveToken::WHITESPACE        =>  '[ \r\n\t]+',
+        SieveToken::TAG               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
         /*
         "                           # match a quotation mark
         (                           # start matching parts that include an escaped quotation mark
@@ -152,11 +194,11 @@ class SieveScanner
         [^"]*                       # accept any trailing part that does not contain any quotation marks
         "                           # end of the quoted string
         */
-        SieveToken::QuotedString      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
-        SieveToken::Number            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
-        SieveToken::Comment           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
-        SieveToken::MultilineString   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
-        SieveToken::Identifier        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        SieveToken::Unknown           =>  '[^ \r\n\t]+',
+        SieveToken::QUOTED_STRING      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
+        SieveToken::NUMBER            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
+        SieveToken::COMMENT           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
+        SieveToken::MULTILINE_STRING   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
+        SieveToken::IDENTIFIER        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
+        SieveToken::UNKNOWN           =>  '[^ \r\n\t]+',
     ];
 }

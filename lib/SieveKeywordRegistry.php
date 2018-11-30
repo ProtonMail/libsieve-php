@@ -4,13 +4,13 @@ namespace Sieve;
 
 class SieveKeywordRegistry
 {
-    protected $registry_ = [];
-    protected $matchTypes_ = [];
-    protected $comparators_ = [];
-    protected $addressParts_ = [];
-    protected $commands_ = [];
-    protected $tests_ = [];
-    protected $arguments_ = [];
+    protected $registry = [];
+    protected $matchTypes = [];
+    protected $comparators = [];
+    protected $addressParts = [];
+    protected $commands = [];
+    protected $tests = [];
+    protected $arguments = [];
 
     /**
      * @var array a map with the extension name as key.
@@ -35,25 +35,31 @@ class SieveKeywordRegistry
      */
     protected $requiredExtensions = [];
 
-    public function __construct($extensions_enabled, $custom_extensions)
+    /**
+     * SieveKeywordRegistry constructor.
+     *
+     * @param array|null $extensions_enabled
+     * @param            $custom_extensions
+     */
+    public function __construct(?array $extensions_enabled, array $custom_extensions)
     {
         $keywords = simplexml_load_file(dirname(__FILE__) . '/keywords.xml');
         foreach ($keywords->children() as $keyword) {
             switch ($keyword->getName()) {
                 case 'matchtype':
-                    $type = &$this->matchTypes_;
+                    $type = &$this->matchTypes;
                     break;
                 case 'comparator':
-                    $type = &$this->comparators_;
+                    $type = &$this->comparators;
                     break;
                 case 'addresspart':
-                    $type = &$this->addressParts_;
+                    $type = &$this->addressParts;
                     break;
                 case 'test':
-                    $type = &$this->tests_;
+                    $type = &$this->tests;
                     break;
                 case 'command':
-                    $type = &$this->commands_;
+                    $type = &$this->commands;
                     break;
                 default:
                     trigger_error('Unsupported keyword type "' . $keyword->getName()
@@ -78,20 +84,20 @@ class SieveKeywordRegistry
                 continue;
             }
 
-            if (array_key_exists($name, $this->registry_)) {
+            if (array_key_exists($name, $this->registry)) {
                 trigger_error('overwriting extension "' . $name . '"');
             }
-            $this->registry_[$name] = $extension;
+            $this->registry[$name] = $extension;
         }
 
         foreach ($custom_extensions as $custom_extension) {
             $extension = simplexml_load_file($custom_extension);
             $name = (string) $extension['name'];
 
-            if (array_key_exists($name, $this->registry_)) {
+            if (array_key_exists($name, $this->registry)) {
                 trigger_error('overwriting extension "' . $name . '"');
             }
-            $this->registry_[$name] = $extension;
+            $this->registry[$name] = $extension;
         }
     }
 
@@ -100,9 +106,9 @@ class SieveKeywordRegistry
      *
      * @param string $extension
      */
-    public function activate(string $extension)
+    public function activate(string $extension): void
     {
-        if (!isset($this->registry_[$extension])  // extension unknown
+        if (!isset($this->registry[$extension])  // extension unknown
             || isset($this->loadedExtensions[$extension]) // already loaded
         ) {
             return;
@@ -113,7 +119,7 @@ class SieveKeywordRegistry
         // we can safely unset the required extension
         unset($this->requiredExtensions[$extension]);
 
-        $xml = $this->registry_[$extension];
+        $xml = $this->registry[$extension];
 
         if (isset($xml['require'])) {
             $requireExtensions = explode(',', $xml['require']);
@@ -135,23 +141,23 @@ class SieveKeywordRegistry
         foreach ($xml->children() as $e) {
             switch ($e->getName()) {
                 case 'matchtype':
-                    $type = &$this->matchTypes_;
+                    $type = &$this->matchTypes;
                     break;
                 case 'comparator':
-                    $type = &$this->comparators_;
+                    $type = &$this->comparators;
                     break;
                 case 'addresspart':
-                    $type = &$this->addressParts_;
+                    $type = &$this->addressParts;
                     break;
                 case 'test':
-                    $type = &$this->tests_;
+                    $type = &$this->tests;
                     break;
                 case 'command':
-                    $type = &$this->commands_;
+                    $type = &$this->commands;
                     break;
                 case 'tagged-argument':
                     $xml = $e->parameter[0];
-                    $this->arguments_[(string) $xml['name']] = [
+                    $this->arguments[(string) $xml['name']] = [
                         'extends' => (string) $e['extends'],
                         'rules' => $xml,
                     ];
@@ -169,65 +175,93 @@ class SieveKeywordRegistry
         }
     }
 
-    public function isTest($name)
+    /**
+     * Is test.
+     *
+     * @param string $name
+     * @return bool
+     */
+    public function isTest(string $name): bool
     {
-        return isset($this->tests_[$name]);
+        return isset($this->tests[$name]);
     }
 
-    public function isCommand($name)
+    /**
+     * Is command.
+     *
+     * @param string $name
+     * @return bool
+     */
+    public function isCommand(string $name): bool
     {
-        return isset($this->commands_[$name]);
+        return isset($this->commands[$name]);
     }
 
+    /**
+     * Get matchtype.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
     public function matchtype($name)
     {
-        if (isset($this->matchTypes_[$name])) {
-            return $this->matchTypes_[$name];
-        }
-
-        return null;
+        return $this->matchTypes[$name] ?? null;
     }
 
-    public function addresspart($name)
+    /**
+     * Get addresspart.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public function addresspart(string $name)
     {
-        if (isset($this->addressParts_[$name])) {
-            return $this->addressParts_[$name];
-        }
-
-        return null;
+        return $this->addressParts[$name] ?? null;
     }
 
-    public function comparator($name)
+    /**
+     * Get comparator.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public function comparator(string $name)
     {
-        if (isset($this->comparators_[$name])) {
-            return $this->comparators_[$name];
-        }
-
-        return null;
+        return $this->comparators[$name] ?? null;
     }
 
+    /**
+     * Get test.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
     public function test($name)
     {
-        if (isset($this->tests_[$name])) {
-            return $this->tests_[$name];
-        }
-
-        return null;
+        return $this->tests[$name] ?? null;
     }
 
+    /**
+     * Get command.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
     public function command($name)
     {
-        if (isset($this->commands_[$name])) {
-            return $this->commands_[$name];
-        }
-
-        return null;
+        return $this->commands[$name] ?? null;
     }
 
-    public function arguments($command)
+    /**
+     * Get arguments.
+     *
+     * @param string $command
+     * @return array
+     */
+    public function arguments(string $command): array
     {
         $res = [];
-        foreach ($this->arguments_ as $arg) {
+        foreach ($this->arguments as $arg) {
             if (preg_match('/' . $arg['extends'] . '/', $command)) {
                 array_push($res, $arg['rules']);
             }
@@ -236,46 +270,84 @@ class SieveKeywordRegistry
         return $res;
     }
 
-    public function argument($name)
+    /**
+     * Get (single) argument.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public function argument(string $name)
     {
-        if (isset($this->arguments_[$name])) {
-            return $this->arguments_[$name]['rules'];
-        }
-
-        return null;
+        return $this->arguments[$name]['rules'] ?? null;
     }
 
-    public function requireStrings()
+    /**
+     * Get require strings.
+     *
+     * @return string[]
+     */
+    public function requireStrings(): array
     {
-        return array_keys($this->registry_);
+        return array_keys($this->registry);
     }
 
-    public function matchTypes()
+    /**
+     * Get match types.
+     *
+     * @return string[]
+     */
+    public function matchTypes(): array
     {
-        return array_keys($this->matchTypes_);
+        return array_keys($this->matchTypes);
     }
 
+    /**
+     * Get comparators.
+     *
+     * @return string[]
+     */
     public function comparators()
     {
-        return array_keys($this->comparators_);
+        return array_keys($this->comparators);
     }
 
-    public function addressParts()
+    /**
+     * Get address parts.
+     *
+     * @return string[]
+     */
+    public function addressParts(): array
     {
-        return array_keys($this->addressParts_);
+        return array_keys($this->addressParts);
     }
 
-    public function tests()
+    /**
+     * Get tests.
+     *
+     * @return string[]
+     */
+    public function tests(): array
     {
-        return array_keys($this->tests_);
+        return array_keys($this->tests);
     }
 
-    public function commands()
+    /**
+     * Get commands.
+     *
+     * @return string[]
+     */
+    public function commands(): array
     {
-        return array_keys($this->commands_);
+        return array_keys($this->commands);
     }
 
-    public function validateRequires(SieveToken $sieveToken)
+    /**
+     * Validate requires.
+     *
+     * @param SieveToken $sieveToken
+     * @throws SieveException if invalid
+     */
+    public function validateRequires(SieveToken $sieveToken): void
     {
         $message = "Extensions requirement are not fulfilled: \n";
         $error = false;

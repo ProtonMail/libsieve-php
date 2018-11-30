@@ -4,130 +4,184 @@ namespace Sieve;
 
 class SieveTree
 {
-    protected $childs_;
-    protected $parents_;
-    protected $nodes_;
-    protected $max_id_;
-    protected $dump_;
+    protected $children;
+    protected $parents;
+    protected $nodes;
+    protected $max_id;
+    protected $dump;
 
+    /**
+     * SieveTree constructor.
+     *
+     * @param string $name
+     */
     public function __construct($name = 'tree')
     {
-        $this->childs_ = [];
-        $this->parents_ = [];
-        $this->nodes_ = [];
-        $this->max_id_ = 0;
+        $this->children = [];
+        $this->parents = [];
+        $this->nodes = [];
+        $this->max_id = 0;
 
-        $this->parents_[0] = null;
-        $this->nodes_[0] = $name;
+        $this->parents = [null];
+        $this->nodes = [$name];
     }
 
-    public function addChild(SieveDumpable $child)
+    /**
+     * Add child to last node.
+     *
+     * @param SieveToken $child
+     * @return int
+     */
+    public function addChild(SieveToken $child): ?int
     {
-        return $this->addChildTo($this->max_id_, $child);
+        return $this->addChildTo($this->max_id, $child);
     }
 
-    public function addChildTo($parent_id, SieveDumpable $child)
+    /**
+     * Add child to given parent.
+     *
+     * @param int           $parent_id
+     * @param SieveToken $child
+     * @return int|null
+     */
+    public function addChildTo(int $parent_id, SieveToken $child): ?int
     {
-        if (!is_int($parent_id) || !isset($this->nodes_[$parent_id])) {
+        if (!is_int($parent_id) || !isset($this->nodes[$parent_id])) {
             return null;
         }
 
-        if (!isset($this->childs_[$parent_id])) {
-            $this->childs_[$parent_id] = [];
+        if (!isset($this->children[$parent_id])) {
+            $this->children[$parent_id] = [];
         }
 
-        $child_id = ++$this->max_id_;
-        $this->nodes_[$child_id] = $child;
-        $this->parents_[$child_id] = $parent_id;
-        array_push($this->childs_[$parent_id], $child_id);
+        $child_id = ++$this->max_id;
+        $this->nodes[$child_id] = $child;
+        $this->parents[$child_id] = $parent_id;
+        array_push($this->children[$parent_id], $child_id);
 
         return $child_id;
     }
 
-    public function getRoot()
+    /**
+     * Get root Id.
+     *
+     * @return int
+     */
+    public function getRoot(): int
     {
         return 0;
     }
 
-    public function getChilds($node_id)
+    /**
+     * Get children of a specific node.
+     *
+     * @param int $node_id
+     * @return int[]|null the child ids or null, if parent node not found
+     */
+    public function getChildren(int $node_id): ?array
     {
-        if (!is_int($node_id)
-        || !isset($this->nodes_[$node_id])) {
+        if (!isset($this->nodes[$node_id])) {
             return null;
         }
 
-        if (!isset($this->childs_[$node_id])) {
-            return [];
-        }
-
-        return $this->childs_[$node_id];
+        return $this->children[$node_id] ?? [];
     }
 
-    public function getNode($node_id): ?SieveToken
+    /**
+     * Get node from Id.
+     *
+     * @param int $node_id
+     * @return SieveToken|null
+     */
+    public function getNode(int $node_id): ?SieveToken
     {
-        if ($node_id == 0 || !is_int($node_id) || !isset($this->nodes_[$node_id])) {
+        if ($node_id === 0 || !isset($this->nodes[$node_id])) {
             return null;
         }
 
-        return $this->nodes_[$node_id];
+        return $this->nodes[$node_id];
     }
 
-    public function getParent(int $node_id)
+    /**
+     * Get parent from child id.
+     *
+     * @param int $node_id
+     * @return int|null
+     */
+    public function getParent(int $node_id): ?int
     {
-        return $this->parents_[$node_id];
+        return $this->parents[$node_id] ?? null;
     }
 
-    public function getLastId()
+    /**
+     * Get last id.
+     *
+     * @return int
+     */
+    public function getLastId(): int
     {
-        return $this->max_id_;
-    }
-    public function dump()
-    {
-        $this->dump_ = $this->nodes_[$this->getRoot()] . "\n";
-        $this->dumpChilds_($this->getRoot(), ' ');
-
-        return $this->dump_;
+        return $this->max_id;
     }
 
-    protected function dumpChilds_($parent_id, $prefix)
+    /**
+     * Dump the tree.
+     *
+     * @return string
+     */
+    public function dump(): string
     {
-        if (!isset($this->childs_[$parent_id])) {
-            return;
-        }
+        return $this->nodes[$this->getRoot()] . "\n" . $this->dumpChildren($this->getRoot(), ' ');
+    }
 
-        $childs = $this->childs_[$parent_id];
-        $last_child = count($childs);
-
+    /**
+     * Dump children of given node.
+     *
+     * @param int    $parent_id
+     * @param string $prefix
+     * @return string
+     */
+    protected function dumpChildren(int $parent_id, string $prefix): string
+    {
+        $children = $this->children[$parent_id] ?? [];
+        $last_child = count($children);
+        $dump = '';
         for ($i = 1; $i <= $last_child; ++$i) {
-            $child_node = $this->nodes_[$childs[$i - 1]];
-            $infix = ($i == $last_child ? '`--- ' : '|--- ');
-            $this->dump_ .= $prefix . $infix . $child_node->dump() . ' (id:' . $childs[$i - 1] . ")\n";
+            $child_node = $this->nodes[$children[$i - 1]];
+            $infix = ($i === $last_child ? '`--- ' : '|--- ');
+            $dump .= $prefix . $infix . $child_node->dump() . ' (id:' . $children[$i - 1] . ")\n";
 
-            $next_prefix = $prefix . ($i == $last_child ? '   ' : '|  ');
-            $this->dumpChilds_($childs[$i - 1], $next_prefix);
+            $next_prefix = $prefix . ($i === $last_child ? '   ' : '|  ');
+            $dump .= $this->dumpChildren($children[$i - 1], $next_prefix);
         }
+        return $dump;
     }
 
-    public function getText()
+    /**
+     * Get text.
+     *
+     * @return string
+     */
+    public function getText(): string
     {
-        $this->dump_ = '';
-        $this->childText_($this->getRoot());
-
-        return $this->dump_;
+        return $this->childrenText($this->getRoot());
     }
 
-    protected function childText_($parent_id)
+    /**
+     * Get child text.
+     *
+     * @param $parent_id
+     * @return string
+     */
+    protected function childrenText($parent_id): string
     {
-        if (!isset($this->childs_[$parent_id])) {
-            return;
-        }
+        $children = $this->children[$parent_id] ?? [];
 
-        $childs = $this->childs_[$parent_id];
-
-        for ($i = 0; $i < count($childs); ++$i) {
-            $child_node = $this->nodes_[$childs[$i]];
-            $this->dump_ .= $child_node->text();
-            $this->childText_($childs[$i]);
+        $dump = '';
+        for ($i = 0; $i < count($children); ++$i) {
+            $child_node = $this->nodes[$children[$i]];
+            $dump .= $child_node->text();
+            $dump .= $this->childrenText($children[$i]);
         }
+        return $dump;
     }
 }

@@ -6,11 +6,11 @@ use Exception;
 
 class SieveException extends Exception
 {
-    protected $token_;
+    protected $token;
 
     public function __construct(SieveToken $token, $arg)
     {
-        $this->token_ = $token;
+        $this->token = $token;
 
         if (is_string($arg)) {
             $message = $arg;
@@ -33,6 +33,6 @@ class SieveException extends Exception
 
     public function getLineNo()
     {
-        return $this->token_->line;
+        return $this->token->line;
     }
 }
