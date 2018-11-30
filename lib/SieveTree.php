@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sieve;
 
 class SieveTree
@@ -99,7 +101,7 @@ class SieveTree
             return null;
         }
 
-        return $this->nodes[$node_id];
+        return $this->nodes[$node_id] ?? null;
     }
 
     /**

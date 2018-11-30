@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PHPUnit\Framework\TestCase;
 use Sieve\SieveParser;
 
@@ -36,25 +38,29 @@ EOS;
         $parser = new SieveParser();
         $parser->parse($sieve);
 
-        static::assertEquals($sieve, $parser->getParseTree()->GetText());
+        static::assertEquals($sieve, $parser->getParseTree()->getText());
     }
 
     /**
      * @dataProvider goodProvider
+     * @param string $sieve
+     * @throws \Sieve\SieveException
      */
-    public function testGood($sieve)
+    public function testGood(string $sieve)
     {
         $parser = new SieveParser();
         $parser->parse($sieve);
         // it should not raise an exception
-        static::assertEquals($sieve, $parser->getParseTree()->GetText());
+        static::assertEquals($sieve, $parser->getScriptText());
     }
 
     /**
      * @dataProvider badProvider
      * @expectedException \Sieve\SieveException
+     * @param string $sieve
+     * @throws \Sieve\SieveException
      */
-    public function testBad($sieve)
+    public function testBad(string $sieve)
     {
         $parser = new SieveParser();
         $parser->parse($sieve);

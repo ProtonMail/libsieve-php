@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sieve;
 
 class SieveToken implements SieveDumpable
@@ -78,7 +80,7 @@ class SieveToken implements SieveDumpable
      */
     public function is(int $type): bool
     {
-        return $this->type & $type;
+        return (bool) ($this->type & $type);
     }
 
     /**

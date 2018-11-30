@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sieve;
 
 class SieveSemantics
@@ -192,7 +194,7 @@ class SieveSemantics
      */
     protected function regex(\SimpleXMLElement $arg): string
     {
-        return $arg['regex'] ?? '.*';
+        return (string) ($arg['regex'] ?? '.*');
     }
 
     /**
@@ -203,7 +205,7 @@ class SieveSemantics
      */
     protected function getCase(\SimpleXMLElement $arg): string
     {
-        return $arg['case'] ?? 'adhere';
+        return (string) ($arg['case'] ?? 'adhere');
     }
 
     /**
@@ -214,7 +216,7 @@ class SieveSemantics
      */
     protected function follows(\SimpleXMLElement $arg): string
     {
-        return $arg['follows'] ?? '.*';
+        return (string)( $arg['follows'] ?? '.*');
     }
 
     /**
@@ -697,7 +699,7 @@ class SieveSemantics
                 return;
             }
 
-            if ($token->is($arg['type']) && $arg['occurrence'] === 1) {
+            if ($token->is($arg['type']) && $arg['occurrence'] === '1') {
                 throw new SieveException(
                     $token,
                     SieveToken::typeString($token->type) . " $token->text where " . $arg['name'] . ' expected'

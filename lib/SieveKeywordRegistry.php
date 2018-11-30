@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sieve;
 
 class SieveKeywordRegistry
@@ -62,9 +64,7 @@ class SieveKeywordRegistry
                     $type = &$this->commands;
                     break;
                 default:
-                    trigger_error('Unsupported keyword type "' . $keyword->getName()
-                    . '" in file "keywords.xml"');
-
+                    trigger_error("Unsupported keyword type \"{$keyword->getName()}\" in file \"keywords.xml\"");
                     return;
             }
 
@@ -85,7 +85,7 @@ class SieveKeywordRegistry
             }
 
             if (array_key_exists($name, $this->registry)) {
-                trigger_error('overwriting extension "' . $name . '"');
+                trigger_error("overwriting extension \"$name\"");
             }
             $this->registry[$name] = $extension;
         }
@@ -95,7 +95,7 @@ class SieveKeywordRegistry
             $name = (string) $extension['name'];
 
             if (array_key_exists($name, $this->registry)) {
-                trigger_error('overwriting extension "' . $name . '"');
+                trigger_error("overwriting extension \"$name\"");
             }
             $this->registry[$name] = $extension;
         }
@@ -122,7 +122,7 @@ class SieveKeywordRegistry
         $xml = $this->registry[$extension];
 
         if (isset($xml['require'])) {
-            $requireExtensions = explode(',', $xml['require']);
+            $requireExtensions = explode(',', (string) $xml['require']);
             foreach ($requireExtensions as $require) {
                 if ($require[0] !== '!') {
                     if (!isset($this->loadedExtensions[$require])) {
@@ -256,7 +256,7 @@ class SieveKeywordRegistry
      * Get arguments.
      *
      * @param string $command
-     * @return array
+     * @return \SimpleXMLElement[]
      */
     public function arguments(string $command): array
     {

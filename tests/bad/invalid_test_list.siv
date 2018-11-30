@@ -1,0 +1,4 @@
+
+if allof(true, false {
+    discard;
+}
