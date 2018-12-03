@@ -53,7 +53,7 @@ class SieveSemantics
             if (!preg_match('/^(if|elsif|anyof|allof|not)$/i', $prevToken->text)) {
                 throw new SieveException($token, $command . ' may not appear after ' . $prevToken->text);
             }
-        } elseif (isset($prevToken)) {
+        } elseif (isset($prevToken) || in_array($command, ['elsif', 'else'])) {
             switch ($command) {
                 case 'require':
                     $valid_after = 'require';
@@ -66,8 +66,12 @@ class SieveSemantics
                     $valid_after = $this->commandsRegex();
             }
 
-            if (!preg_match('/^' . $valid_after . '$/i', $prevToken->text)) {
-                throw new SieveException($token, $command . ' may not appear after ' . $prevToken->text);
+            if (isset($prevToken)) {
+                if (!preg_match('/^' . $valid_after . '$/i', $prevToken->text)) {
+                    throw new SieveException($token, "$command may not appear after $prevToken->text");
+                }
+            } else {
+                throw new SieveException($token,  "$command cannot be the first token");
             }
         }
 

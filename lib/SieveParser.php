@@ -359,12 +359,10 @@ class SieveParser
     {
         $this->commands($parent_id);
 
-        $token = $this->scanner->getCurrentToken();
-        try {
-            $token = $this->scanner->nextToken();
-        } catch (\Throwable $throwable) {
-            // nothing
+        if ($this->scanner->currentTokenIs(SieveToken::SCRIPT_END)) {
+            throw new SieveException($this->scanner->getCurrentToken(), SieveToken::BLOCK_END);
         }
+        $token = $this->scanner->nextToken();
         if (!$token->is(SieveToken::BLOCK_END)) {
             throw new SieveException($token, SieveToken::BLOCK_END);
         }
