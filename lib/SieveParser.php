@@ -155,7 +155,6 @@ class SieveParser
         );
 
         $this->tree = new SieveTree('tree');
-
         $this->commands($this->tree->getRoot());
 
         if (!$this->scanner->currentTokenIs(SieveToken::SCRIPT_END)) {
@@ -360,7 +359,12 @@ class SieveParser
     {
         $this->commands($parent_id);
 
-        $token = $this->scanner->nextToken();
+        $token = $this->scanner->getCurrentToken();
+        try {
+            $token = $this->scanner->nextToken();
+        } catch (\Throwable $throwable) {
+            // nothing
+        }
         if (!$token->is(SieveToken::BLOCK_END)) {
             throw new SieveException($token, SieveToken::BLOCK_END);
         }
