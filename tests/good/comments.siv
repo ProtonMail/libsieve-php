@@ -1,6 +1,7 @@
 # comment
-
+require "vacation";
 /* comment */
+require "reject";
 
 if true {
     keep;
