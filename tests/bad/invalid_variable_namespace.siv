@@ -1,0 +1,4 @@
+require "variables";
+
+set "name.space" "value";
+keep;
