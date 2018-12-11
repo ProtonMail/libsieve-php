@@ -36,7 +36,7 @@ class SieveException extends Exception
             $message = "$tokenType where $type expected near $token->text";
         }
 
-        parent::__construct("line $token->line : $message");
+        parent::__construct("line $token->line: $message");
     }
 
     public function getLineNo()
