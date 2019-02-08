@@ -42,7 +42,7 @@ class SieveScanner
         $pos = 0;
         $line = 1;
 
-        $scriptLength = mb_strlen($script);
+        $scriptLength = strlen($script);
 
         $unprocessedScript = $script;
 
@@ -55,14 +55,14 @@ class SieveScanner
 
         foreach ($this->tokenMatch as $type => $subregex) {
             $nameToType[chr($i)] = $type;
-            $regex[] = '(?P<' . chr($i) . ">^$subregex)";
+            $regex[] = '(?P<' . chr($i) . ">\G$subregex)";
             $i++;
         }
 
         $regex = '/' . join('|', $regex) . '/';
 
         while ($pos < $scriptLength) {
-            if (preg_match($regex, $unprocessedScript, $match)) {
+            if (preg_match($regex, $unprocessedScript, $match, 0, $pos)) {
                 // only keep the group that match and we only want matches with group names
                 // we can use the group name to find the token type using nameToType
                 $filterMatch = array_filter(
@@ -87,10 +87,7 @@ class SieveScanner
 
                 // just remove the part that we parsed: don't extract the new substring using script length
                 // as mb_strlen is \theta(pos)  (it's linear in the position)
-                $matchLength = mb_strlen($currentMatch);
-                $unprocessedScript = mb_substr($unprocessedScript, $matchLength);
-
-                $pos += $matchLength;
+                $pos += strlen($currentMatch);
                 $line += mb_substr_count($currentMatch, "\n");
             } else {
                 $this->tokens[] = new SieveToken(SieveToken::UNKNOWN, '', $line);
