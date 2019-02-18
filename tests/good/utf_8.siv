@@ -1,0 +1,5 @@
+require "fileinto";
+
+if address :localpart :comparator "i;unicode-casemap" "from" "Idéeßuccinte" {
+    fileinto "Idées!😂";
+}
