@@ -61,14 +61,14 @@ class ExtensionCheckExample
         /** @var int $root_node_id */
         $root_node_id = $this->tree->getRoot();
         // The root is not a node, we can only access its children
-        $children = $this->tree->getChilds($root_node_id);
+        $children = $this->tree->getChildren($root_node_id);
         foreach ($children as $child) {
             // The child is an id to a node, which can be access using the following:
             $node = $this->tree->getNode($child);
 
             // is can be used to check the type of node.
-            if ($node->is(\Sieve\SieveToken::Identifier) && $node->text === "require") {
-                if ($this->checkChildren($this->tree->getChilds($child), $extension)) {
+            if ($node->is(\Sieve\SieveToken::IDENTIFIER) && $node->text === "require") {
+                if ($this->checkChildren($this->tree->getChildren($child), $extension)) {
                     return true;
                 }
             }
@@ -96,7 +96,7 @@ class ExtensionCheckExample
         }
 
         $node = $this->tree->getNode($children);
-        return $node->is(\Sieve\SieveToken::QuotedString) && $extension === trim($node->text, '"');
+        return $node->is(\Sieve\SieveToken::QUOTED_STRING) && $extension === trim($node->text, '"');
     }
 }
 
@@ -147,7 +147,7 @@ class UsageExample
         /** @var int $root_node_id */
         $root_node_id = $this->tree->getRoot();
         // The root is not a node, we can only access its children
-        $children = $this->tree->getChilds($root_node_id);
+        $children = $this->tree->getChildren($root_node_id);
         $this->displayNodeList($children);
     }
 
@@ -179,11 +179,11 @@ class UsageExample
 
         // All the possible node types are listed as constants in the class SieveToken...
         switch ($node->type) {
-            case \Sieve\SieveToken::ScriptEnd:
+            case \Sieve\SieveToken::SCRIPT_END:
                 printf($indent . "EOS");
                 break;
-            case Sieve\SieveToken::Whitespace:
-            case Sieve\SieveToken::Comment:
+            case Sieve\SieveToken::WHITESPACE:
+            case Sieve\SieveToken::COMMENT:
                 break;
             default:
                 // the $node->type is a integer. It can be turned into an explicit string this way...
@@ -193,14 +193,14 @@ class UsageExample
                 $end_color = '';
 
                 // The type of a node can be checked with the is method. Mask can be used to match several types.
-                if ($node->is(\Sieve\SieveToken::QuotedString | Sieve\SieveToken::MultilineString)) {
+                if ($node->is(\Sieve\SieveToken::QUOTED_STRING | Sieve\SieveToken::MULTILINE_STRING)) {
                     // we want to put a specific color arround strings...
                     $open_color = "\e[1;32;47m";
                     $end_color = "\e[0m";
                 }
 
                 // The children of a node can be obtain through this method:
-                $children = $this->tree->getChilds($node_id);
+                $children = $this->tree->getChildren($node_id);
 
                 // do whatever you want with a node and its children :) Here we are going to display them.
                 printf("[%4d, %-10.10s (%5d) ]%s ${open_color}%s$end_color" . PHP_EOL, $node->line, $type, $node->type, $indent, $node->text);
