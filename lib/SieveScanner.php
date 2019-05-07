@@ -59,7 +59,7 @@ class SieveScanner
             $i++;
         }
 
-        $regex = '/' . join('|', $regex) . '/';
+        $regex = '/' . implode('|', $regex) . '/';
 
         while ($pos < $scriptLength) {
             if (preg_match($regex, $unprocessedScript, $match, 0, $pos)) {
@@ -196,7 +196,8 @@ class SieveScanner
         SieveToken::QUOTED_STRING      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
         SieveToken::NUMBER            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
         SieveToken::COMMENT           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
-        SieveToken::MULTILINE_STRING   =>  'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
+        SieveToken::MULTILINE_STRING =>
+            'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
         SieveToken::IDENTIFIER        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
         SieveToken::UNKNOWN           =>  '[^ \r\n\t]+',
     ];

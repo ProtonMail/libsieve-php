@@ -71,7 +71,7 @@ class SieveSemantics
                     throw new SieveException($token, "$command may not appear after $prevToken->text");
                 }
             } else {
-                throw new SieveException($token,  "$command cannot be the first token");
+                throw new SieveException($token, "$command cannot be the first token");
             }
         }
 
@@ -220,7 +220,7 @@ class SieveSemantics
      */
     protected function follows(\SimpleXMLElement $arg): string
     {
-        return (string)( $arg['follows'] ?? '.*');
+        return (string) ( $arg['follows'] ?? '.*');
     }
 
     /**
