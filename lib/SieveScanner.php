@@ -68,7 +68,7 @@ class SieveScanner
                 $filterMatch = array_filter(
                     $match,
                     function ($value, $key) {
-                        return is_string($key) && isset($value) && $value !== "";
+                        return is_string($key) && isset($value) && $value !== '';
                     },
                     ARRAY_FILTER_USE_BOTH
                 );

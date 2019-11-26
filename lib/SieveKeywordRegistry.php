@@ -263,7 +263,7 @@ class SieveKeywordRegistry
         $res = [];
         foreach ($this->arguments as $arg) {
             if (preg_match('/' . $arg['extends'] . '/', $command)) {
-                array_push($res, $arg['rules']);
+                $res[] = $arg['rules'];
             }
         }
 

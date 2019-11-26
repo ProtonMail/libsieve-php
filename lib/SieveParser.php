@@ -194,7 +194,7 @@ class SieveParser
 
                 if ($token->is(SieveToken::BLOCK_START)) {
                     $this->tree->addChildTo($thisNode, $token);
-                    $this->block($thisNode, $semantics);
+                    $this->block($thisNode);
                     continue;
                 }
 
