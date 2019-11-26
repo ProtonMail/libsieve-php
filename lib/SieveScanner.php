@@ -128,8 +128,8 @@ class SieveScanner
      */
     public function currentTokenIs($type): bool
     {
-        $current_token = $this->getCurrentToken();
-        return isset($current_token) ? $current_token->is($type) : false;
+        $currentToken = $this->getCurrentToken();
+        return isset($currentToken) ? $currentToken->is($type) : false;
     }
 
     /**

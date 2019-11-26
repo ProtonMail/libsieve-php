@@ -66,12 +66,12 @@ EOS;
         $parser->parse($sieve);
     }
 
-    private function provider($dir_name)
+    private function provider($dirName)
     {
-        $directory_iterator = new DirectoryIterator(__DIR__ . '/' . $dir_name);
-        $iterator = new RegexIterator($directory_iterator, "/.*.siv/", RegexIterator::MATCH);
-        foreach ($iterator as $sieve_file) {
-            yield $sieve_file->getBasename('.siv') => [file_get_contents($sieve_file->getPathname())];
+        $directoryIterator = new DirectoryIterator(__DIR__ . '/' . $dirName);
+        $iterator = new RegexIterator($directoryIterator, "/.*.siv/", RegexIterator::MATCH);
+        foreach ($iterator as $sieveFile) {
+            yield $sieveFile->getBasename('.siv') => [file_get_contents($sieveFile->getPathname())];
         }
     }
 
@@ -88,24 +88,24 @@ EOS;
     /**
      * @dataProvider dataDumpProvider
      * @param string $sieve
-     * @param string $dump_expected
+     * @param string $dumpExpected
      * @throws \Sieve\SieveException
      */
-    public function testDump(string $sieve, string $dump_expected)
+    public function testDump(string $sieve, string $dumpExpected)
     {
         $parser = new SieveParser();
         $parser->parse($sieve);
         $dump = $parser->dumpParseTree();
 
         $this->assertStringStartsWith(
-            str_replace("\r", '', trim($dump_expected)),
+            str_replace("\r", '', trim($dumpExpected)),
             str_replace("\r", '', trim($dump))
         );
     }
 
     public function dataDumpProvider()
     {
-        $dump_expected0 = <<<'DUMP'
+        $dumpExpected0 = <<<'DUMP'
 tree
  `--- <if> type:identifier line:1 (id:1)
     |--- < > type:whitespace line:1 (id:2)
@@ -118,7 +118,7 @@ tree
     `--- <}> type:block end line:1 (id:9)
 DUMP;
 
-        $dump_expected1 = <<<'DUMP'
+        $dumpExpected1 = <<<'DUMP'
 tree
  `--- <if> type:identifier line:1 (id:1)
     |--- < > type:whitespace line:1 (id:2)
@@ -136,7 +136,7 @@ tree
     `--- <}> type:block end line:1 (id:14)
 DUMP;
 
-        $dump_expected2 = <<<'DUMP'
+        $dumpExpected2 = <<<'DUMP'
 tree
  `--- <require> type:identifier line:1 (id:1)
     |--- < > type:whitespace line:1 (id:2)
@@ -149,7 +149,7 @@ tree
     `--- <;> type:semicolon line:1 (id:9)
 DUMP;
 
-        $dump_expected3 = <<<'DUMP'
+        $dumpExpected3 = <<<'DUMP'
 tree
  |--- <# C\n> type:comment line:1 (id:1)
  |--- <if> type:identifier line:2 (id:2)
@@ -176,11 +176,11 @@ tree
     `--- <}> type:block end line:6 (id:23)
 DUMP;
 
-        yield ['if allof(true) {}', $dump_expected0];
-        yield ['if header :is "To" ["a@b.c"] {}', $dump_expected1];
+        yield ['if allof(true) {}', $dumpExpected0];
+        yield ['if header :is "To" ["a@b.c"] {}', $dumpExpected1];
         yield [
             'require ["virustest", "comparator-i;ascii-numeric"];',
-            $dump_expected2
+            $dumpExpected2
         ];
         yield [
             '# C
@@ -189,7 +189,7 @@ if address :is "b" text:
 t
 .
 {}',
-            $dump_expected3
+            $dumpExpected3
         ];
     }
 }

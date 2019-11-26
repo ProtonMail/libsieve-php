@@ -6,7 +6,7 @@ namespace Sieve;
 
 class SieveSemantics
 {
-    protected static $requiredExtensions_ = [];
+    protected static $requiredExtensions = [];
 
     protected $comparator;
     protected $matchType;
@@ -56,18 +56,18 @@ class SieveSemantics
         } elseif (isset($prevToken) || in_array($command, ['elsif', 'else'])) {
             switch ($command) {
                 case 'require':
-                    $valid_after = 'require';
+                    $validAfter = 'require';
                     break;
                 case 'elsif':
                 case 'else':
-                    $valid_after = '(if|elsif)';
+                    $validAfter = '(if|elsif)';
                     break;
                 default:
-                    $valid_after = $this->commandsRegex();
+                    $validAfter = $this->commandsRegex();
             }
 
             if (isset($prevToken)) {
-                if (!preg_match('/^' . $valid_after . '$/i', $prevToken->text)) {
+                if (!preg_match('/^' . $validAfter . '$/i', $prevToken->text)) {
                     throw new SieveException($token, "$command may not appear after $prevToken->text");
                 }
             } else {
@@ -502,7 +502,7 @@ class SieveSemantics
      */
     protected function setRequire(string $extension)
     {
-        array_push(self::$requiredExtensions_, $extension);
+        array_push(self::$requiredExtensions, $extension);
         try {
             $this->registry->activate($extension);
         } catch (\Throwable $throwable) {
