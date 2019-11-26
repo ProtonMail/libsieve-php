@@ -75,18 +75,18 @@ EOS;
     /**
      * Checks the behavior when several extensions are required.
      *
-     * @param string $sieve_extensions
+     * @param string      $sieveExtensions
      * @param null|string $exception
      * @throws \Sieve\SieveException
      * @dataProvider mixExtensionProvider
      */
-    public function testMixExtension(string $sieve_extensions, ?string $exception = null)
+    public function testMixExtension(string $sieveExtensions, ?string $exception = null)
     {
         $path = __DIR__ . "/customExtensions/requireMixedExtension.xml";
         $parser = new SieveParser(null, [$path]);
 
         $sieve = <<<EOS
-require [$sieve_extensions];
+require [$sieveExtensions];
 EOS;
 
         if (isset($exception)) {

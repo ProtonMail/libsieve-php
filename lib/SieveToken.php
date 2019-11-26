@@ -34,7 +34,7 @@ class SieveToken implements SieveDumpable
     public $text;
     public $line;
 
-    protected static $tr_ = ["\r" => '\r', "\n" => '\n', "\t" => '\t'];
+    protected static $tr = ["\r" => '\r', "\n" => '\n', "\t" => '\t'];
 
     protected const TYPE_STR = [
         SieveToken::IDENTIFIER => 'identifier',
@@ -123,6 +123,6 @@ class SieveToken implements SieveDumpable
      */
     public static function escape(string $val): string
     {
-        return strtr($val, self::$tr_);
+        return strtr($val, self::$tr);
     }
 }

@@ -40,10 +40,10 @@ class SieveKeywordRegistry
     /**
      * SieveKeywordRegistry constructor.
      *
-     * @param array|null $extensions_enabled
-     * @param            $custom_extensions
+     * @param array|null $extensionsEnabled
+     * @param            $customExtensions
      */
-    public function __construct(?array $extensions_enabled, array $custom_extensions)
+    public function __construct(?array $extensionsEnabled, array $customExtensions)
     {
         $keywords = simplexml_load_file(dirname(__FILE__) . '/keywords.xml');
         foreach ($keywords->children() as $keyword) {
@@ -80,7 +80,7 @@ class SieveKeywordRegistry
             $extension = simplexml_load_file($file);
             $name = (string) $extension['name'];
 
-            if ($extensions_enabled !== null && !in_array($name, $extensions_enabled)) {
+            if ($extensionsEnabled !== null && !in_array($name, $extensionsEnabled)) {
                 continue;
             }
 
@@ -90,8 +90,8 @@ class SieveKeywordRegistry
             $this->registry[$name] = $extension;
         }
 
-        foreach ($custom_extensions as $custom_extension) {
-            $extension = simplexml_load_file($custom_extension);
+        foreach ($customExtensions as $customExtension) {
+            $extension = simplexml_load_file($customExtension);
             $name = (string) $extension['name'];
 
             if (array_key_exists($name, $this->registry)) {
