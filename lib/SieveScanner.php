@@ -68,7 +68,7 @@ class SieveScanner
                 $filterMatch = array_filter(
                     $match,
                     function ($value, $key) {
-                        return is_string($key) && isset($value) && $value !== "";
+                        return is_string($key) && isset($value) && $value !== '';
                     },
                     ARRAY_FILTER_USE_BOTH
                 );
@@ -126,7 +126,7 @@ class SieveScanner
      * @param $type
      * @return bool
      */
-    public function currentTokenIs($type): bool
+    public function currentTokenIs(int $type): bool
     {
         $currentToken = $this->getCurrentToken();
         return isset($currentToken) ? $currentToken->is($type) : false;

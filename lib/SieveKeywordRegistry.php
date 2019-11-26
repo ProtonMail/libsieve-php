@@ -45,7 +45,7 @@ class SieveKeywordRegistry
      */
     public function __construct(?array $extensionsEnabled, array $customExtensions)
     {
-        $keywords = simplexml_load_file(dirname(__FILE__) . '/keywords.xml');
+        $keywords = simplexml_load_file(__DIR__ . '/keywords.xml');
         foreach ($keywords->children() as $keyword) {
             switch ($keyword->getName()) {
                 case 'matchtype':
@@ -76,11 +76,11 @@ class SieveKeywordRegistry
             }
         }
 
-        foreach (glob(dirname(__FILE__) . '/extensions/*.xml') as $file) {
+        foreach (glob(__DIR__ . '/extensions/*.xml') as $file) {
             $extension = simplexml_load_file($file);
             $name = (string) $extension['name'];
 
-            if ($extensionsEnabled !== null && !in_array($name, $extensionsEnabled)) {
+            if ($extensionsEnabled !== null && !in_array($name, $extensionsEnabled, true)) {
                 continue;
             }
 
@@ -168,8 +168,7 @@ class SieveKeywordRegistry
             }
 
             $name = (string) $e['name'];
-            if (!isset($type[$name]) ||
-                (string) $e['overrides'] === 'true') {
+            if (!isset($type[$name]) || (string) $e['overrides'] === 'true') {
                 $type[$name] = $e->children();
             }
         }
@@ -198,23 +197,19 @@ class SieveKeywordRegistry
     }
 
     /**
-     * Get matchtype.
-     *
      * @param string $name
      * @return mixed|null
      */
-    public function matchtype($name)
+    public function matchType($name)
     {
         return $this->matchTypes[$name] ?? null;
     }
 
     /**
-     * Get addresspart.
-     *
      * @param string $name
      * @return mixed|null
      */
-    public function addresspart(string $name)
+    public function addressPart(string $name)
     {
         return $this->addressParts[$name] ?? null;
     }
@@ -263,7 +258,7 @@ class SieveKeywordRegistry
         $res = [];
         foreach ($this->arguments as $arg) {
             if (preg_match('/' . $arg['extends'] . '/', $command)) {
-                array_push($res, $arg['rules']);
+                $res[] = $arg['rules'];
             }
         }
 
@@ -306,7 +301,7 @@ class SieveKeywordRegistry
      *
      * @return string[]
      */
-    public function comparators()
+    public function comparators(): array
     {
         return array_keys($this->comparators);
     }

@@ -47,7 +47,7 @@ class SieveSemantics
 
         // Check if command may appear at this position within the script
         if ($this->registry->isTest($command)) {
-            if (is_null($prevToken)) {
+            if ($prevToken === null) {
                 throw new SieveException($token, $command . ' may not appear as first command');
             }
             if (!preg_match('/^(if|elsif|anyof|allof|not)$/i', $prevToken->text)) {
@@ -77,20 +77,18 @@ class SieveSemantics
 
         // Check for extension arguments to add to the command
         foreach ($this->registry->arguments($command) as $arg) {
-            switch ((string) $arg['type']) {
-                case 'tag':
-                    array_unshift(
-                        $this->arguments,
-                        [
-                            'type' => SieveToken::TAG,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->regex($arg),
-                            'call' => 'tagHook',
-                            'name' => $this->name($arg),
-                            'subArgs' => $this->makeArguments($arg->children()),
-                        ]
-                    );
-                    break;
+            if ((string) $arg['type'] === 'tag') {
+                array_unshift(
+                    $this->arguments,
+                    [
+                        'type' => SieveToken::TAG,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->regex($arg),
+                        'call' => 'tagHook',
+                        'name' => $this->name($arg),
+                        'subArgs' => $this->makeArguments($arg->children()),
+                    ]
+                );
             }
         }
     }
@@ -220,7 +218,7 @@ class SieveSemantics
      */
     protected function follows(\SimpleXMLElement $arg): string
     {
-        return (string) ( $arg['follows'] ?? '.*');
+        return (string) ($arg['follows'] ?? '.*');
     }
 
     /**
@@ -259,173 +257,137 @@ class SieveSemantics
 
             switch ((string) $arg['type']) {
                 case 'addresspart':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::TAG,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->addressPartRegex(),
-                            'call' => 'addressPartHook',
-                            'name' => 'address part',
-                            'subArgs' => $this->makeArguments($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::TAG,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->addressPartRegex(),
+                        'call' => 'addressPartHook',
+                        'name' => 'address part',
+                        'subArgs' => $this->makeArguments($arg),
+                    ];
                     break;
 
                 case 'block':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::BLOCK_START,
-                            'occurrence' => '1',
-                            'regex' => '{',
-                            'name' => 'block',
-                            'subArgs' => $this->makeArguments($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::BLOCK_START,
+                        'occurrence' => '1',
+                        'regex' => '{',
+                        'name' => 'block',
+                        'subArgs' => $this->makeArguments($arg),
+                    ];
                     break;
 
                 case 'comparator':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::TAG,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => 'comparator',
-                            'name' => 'comparator',
-                            'subArgs' => [
-                                [
-                                    'type' => SieveToken::STRING,
-                                    'occurrence' => '1',
-                                    'call' => 'comparatorHook',
-                                    'case' => 'adhere',
-                                    'regex' => $this->comparatorRegex(),
-                                    'name' => 'comparator string',
-                                    'follows' => 'comparator',
-                                ]
+                    $arguments[] = [
+                        'type' => SieveToken::TAG,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => 'comparator',
+                        'name' => 'comparator',
+                        'subArgs' => [
+                            [
+                                'type' => SieveToken::STRING,
+                                'occurrence' => '1',
+                                'call' => 'comparatorHook',
+                                'case' => 'adhere',
+                                'regex' => $this->comparatorRegex(),
+                                'name' => 'comparator string',
+                                'follows' => 'comparator',
                             ],
-                        ]
-                    );
+                        ],
+                    ];
                     break;
 
                 case 'matchtype':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::TAG,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->matchTypeRegex(),
-                            'call' => 'matchTypeHook',
-                            'name' => 'match type',
-                            'subArgs' => $this->makeArguments($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::TAG,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->matchTypeRegex(),
+                        'call' => 'matchTypeHook',
+                        'name' => 'match type',
+                        'subArgs' => $this->makeArguments($arg),
+                    ];
                     break;
 
                 case 'number':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::NUMBER,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->regex($arg),
-                            'name' => $this->name($arg),
-                            'follows' => $this->follows($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::NUMBER,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->regex($arg),
+                        'name' => $this->name($arg),
+                        'follows' => $this->follows($arg),
+                    ];
                     break;
 
                 case 'requirestrings':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::STRING_LIST,
-                            'occurrence' => $this->occurrence($arg),
-                            'call' => 'setRequire',
-                            'case' => 'adhere',
-                            'regex' => $this->requireStringsRegex(),
-                            'name' => $this->name($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::STRING_LIST,
+                        'occurrence' => $this->occurrence($arg),
+                        'call' => 'setRequire',
+                        'case' => 'adhere',
+                        'regex' => $this->requireStringsRegex(),
+                        'name' => $this->name($arg),
+                    ];
                     break;
 
                 case 'string':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::STRING,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->regex($arg),
-                            'case' => $this->getCase($arg),
-                            'name' => $this->name($arg),
-                            'follows' => $this->follows($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::STRING,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->regex($arg),
+                        'case' => $this->getCase($arg),
+                        'name' => $this->name($arg),
+                        'follows' => $this->follows($arg),
+                    ];
                     break;
 
                 case 'stringlist':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::STRING_LIST,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->regex($arg),
-                            'case' => $this->getCase($arg),
-                            'name' => $this->name($arg),
-                            'follows' => $this->follows($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::STRING_LIST,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->regex($arg),
+                        'case' => $this->getCase($arg),
+                        'name' => $this->name($arg),
+                        'follows' => $this->follows($arg),
+                    ];
                     break;
 
                 case 'tag':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::TAG,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->regex($arg),
-                            'call' => 'tagHook',
-                            'name' => $this->name($arg),
-                            'subArgs' => $this->makeArguments($arg->children()),
-                            'follows' => $this->follows($arg),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::TAG,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->regex($arg),
+                        'call' => 'tagHook',
+                        'name' => $this->name($arg),
+                        'subArgs' => $this->makeArguments($arg->children()),
+                        'follows' => $this->follows($arg),
+                    ];
                     break;
 
                 case 'test':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::IDENTIFIER,
-                            'occurrence' => $this->occurrence($arg),
-                            'regex' => $this->testsRegex(),
-                            'name' => $this->name($arg),
-                            'subArgs' => $this->makeArguments($arg->children()),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::IDENTIFIER,
+                        'occurrence' => $this->occurrence($arg),
+                        'regex' => $this->testsRegex(),
+                        'name' => $this->name($arg),
+                        'subArgs' => $this->makeArguments($arg->children()),
+                    ];
                     break;
 
                 case 'testlist':
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::LEFT_PARENTHESIS,
-                            'occurrence' => '1',
-                            'regex' => '\(',
-                            'name' => $this->name($arg),
-                            'subArgs' => null,
-                        ]
-                    );
-                    array_push(
-                        $arguments,
-                        [
-                            'type' => SieveToken::IDENTIFIER,
-                            'occurrence' => '+',
-                            'regex' => $this->testsRegex(),
-                            'name' => $this->name($arg),
-                            'subArgs' => $this->makeArguments($arg->children()),
-                        ]
-                    );
+                    $arguments[] = [
+                        'type' => SieveToken::LEFT_PARENTHESIS,
+                        'occurrence' => '1',
+                        'regex' => '\(',
+                        'name' => $this->name($arg),
+                        'subArgs' => null,
+                    ];
+                    $arguments[] = [
+                        'type' => SieveToken::IDENTIFIER,
+                        'occurrence' => '+',
+                        'regex' => $this->testsRegex(),
+                        'name' => $this->name($arg),
+                        'subArgs' => $this->makeArguments($arg->children()),
+                    ];
                     break;
             }
         }
@@ -450,7 +412,7 @@ class SieveSemantics
     }
 
     /**
-     * Add dependency that is expected to be fullfilled when parsing
+     * Add dependency that is expected to be fulfilled when parsing
      * of the current command is {@see done}.
      *
      * @param string            $type
@@ -460,16 +422,13 @@ class SieveSemantics
     protected function addDependency(string $type, string $name, \SimpleXMLElement $dependencies): void
     {
         foreach ($dependencies as $d) {
-            array_push(
-                $this->deps,
-                [
-                    'o_type' => $type,
-                    'o_name' => $name,
-                    'type' => $d['type'],
-                    'name' => $d['name'],
-                    'regex' => $d['regex'],
-                ]
-            );
+            $this->deps[] = [
+                'o_type' => $type,
+                'o_name' => $name,
+                'type' => $d['type'],
+                'name' => $d['name'],
+                'regex' => $d['regex'],
+            ];
         }
     }
 
@@ -481,7 +440,7 @@ class SieveSemantics
      * @param string[]|string|null $arg
      * @throws SieveException
      */
-    protected function invoke(SieveToken $token, $func, $arg = [])
+    protected function invoke(SieveToken $token, $func, $arg = []): void
     {
         if (!is_array($arg)) {
             $arg = [$arg];
@@ -500,14 +459,16 @@ class SieveSemantics
      * @param  string $extension the extension name
      * @return string|null an error message
      */
-    protected function setRequire(string $extension)
+    protected function setRequire(string $extension): ?string
     {
-        array_push(self::$requiredExtensions, $extension);
+        self::$requiredExtensions[] = $extension;
         try {
             $this->registry->activate($extension);
         } catch (\Throwable $throwable) {
             return $throwable->getMessage();
         }
+
+        return null;
     }
 
     /**
@@ -517,15 +478,15 @@ class SieveSemantics
      * needed later {@see done}. For address parts from a extension
      * dependency information and valid values are looked up as well.
      *
-     * @param string $addresspart
+     * @param string $addressPart
      */
-    protected function addressPartHook(string $addresspart): void
+    protected function addressPartHook(string $addressPart): void
     {
-        $this->addressPart = $addresspart;
-        $xml = $this->registry->addresspart($this->addressPart);
+        $this->addressPart = $addressPart;
+        $xml = $this->registry->addressPart($this->addressPart);
 
         if (isset($xml)) {
-            // Add possible value and dependancy
+            // Add possible value and dependency
             $this->addArguments($this->addressPart, $this->makeArguments($xml));
             $this->addDependency('address part', $this->addressPart, $xml->requires);
         }
@@ -538,15 +499,15 @@ class SieveSemantics
      * needed later {@see done}. For a match type from extensions
      * dependency information and valid values are looked up as well.
      *
-     * @param string $matchtype
+     * @param string $matchType
      */
-    protected function matchTypeHook(string $matchtype): void
+    protected function matchTypeHook(string $matchType): void
     {
-        $this->matchType = $matchtype;
-        $xml = $this->registry->matchtype($this->matchType);
+        $this->matchType = $matchType;
+        $xml = $this->registry->matchType($this->matchType);
 
         if (isset($xml)) {
-            // Add possible value and dependancy
+            // Add possible value and dependency
             $this->addArguments($this->matchType, $this->makeArguments($xml));
             $this->addDependency('match type', $this->matchType, $xml->requires);
         }
@@ -556,7 +517,7 @@ class SieveSemantics
      * Called after a comparator was found in a command.
      *
      * The comparator is remembered in case it's needed for
-     * comparsion later {@see done}. For a comparator from extensions
+     * comparison later {@see done}. For a comparator from extensions
      * dependency information is looked up as well.
      *
      * @param string $comparator
@@ -567,7 +528,7 @@ class SieveSemantics
         $xml = $this->registry->comparator($this->comparator);
 
         if (isset($xml)) {
-            // Add possible dependancy
+            // Add possible dependency
             $this->addDependency('comparator', $this->comparator, $xml->requires);
         }
     }
@@ -576,17 +537,17 @@ class SieveSemantics
      * Called after a tag was found in a command.
      *
      * The tag is remembered in case it's needed for
-     * comparsion later {@see done}. For a tags from extensions
+     * comparison later {@see done}. For a tags from extensions
      * dependency information is looked up as well.
      *
      * @param string $tag
      */
     protected function tagHook(string $tag): void
     {
-        array_push($this->tags, $tag);
+        $this->tags[] = $tag;
         $xml = $this->registry->argument($tag);
 
-        // Add possible dependancies
+        // Add possible dependencies
         if (isset($xml)) {
             $this->addDependency('tag', $tag, $xml->requires);
         }

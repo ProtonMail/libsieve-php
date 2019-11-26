@@ -95,11 +95,11 @@ class SieveParser
      */
 
     /**
-     * Passthrough whitespace comment.
+     * PassThrough whitespace comment.
      *
      * @param SieveToken $token
      */
-    public function passthroughWhitespaceComment(SieveToken $token): void
+    public function passThroughWhitespaceComment(SieveToken $token): void
     {
         if ($token->is(SieveToken::WHITESPACE)) {
             $this->tree->addChild($token);
@@ -129,7 +129,7 @@ class SieveParser
      *
      * @param SieveToken $token
      */
-    public function passthroughFunction(SieveToken $token): void
+    public function passThroughFunction(SieveToken $token): void
     {
         $this->tree->addChild($token);
     }
@@ -150,11 +150,7 @@ class SieveParser
         $this->scanner = new SieveScanner($this->script);
 
         // Define what happens with passthrough tokens like whitespaces and comments
-        $this->scanner->setPassthroughFunc(
-            [
-                $this, 'passthroughWhitespaceComment',
-            ]
-        );
+        $this->scanner->setPassthroughFunc([$this, 'passThroughWhitespaceComment']);
 
         $this->tree = new SieveTree('tree');
         $this->commands($this->tree->getRoot());
@@ -194,7 +190,7 @@ class SieveParser
 
                 if ($token->is(SieveToken::BLOCK_START)) {
                     $this->tree->addChildTo($thisNode, $token);
-                    $this->block($thisNode, $semantics);
+                    $this->block($thisNode);
                     continue;
                 }
 
@@ -226,14 +222,14 @@ class SieveParser
                 $semantics->validateToken($token);
                 $this->tree->addChildTo($parentId, $token);
             } elseif ($this->scanner->nextTokenIs(SieveToken::STRING_LIST)) {
-                $this->stringlist($parentId, $semantics);
+                $this->stringList($parentId, $semantics);
             } else {
                 break;
             }
         }
 
         if ($this->scanner->nextTokenIs(SieveToken::TEST_LIST)) {
-            $this->testlist($parentId, $semantics);
+            $this->testList($parentId, $semantics);
         }
     }
 
@@ -244,7 +240,7 @@ class SieveParser
      * @param SieveSemantics $semantics
      * @throws SieveException
      */
-    protected function stringlist($parentId, $semantics): void
+    protected function stringList(int $parentId, SieveSemantics $semantics): void
     {
         if (!$this->scanner->nextTokenIs(SieveToken::LEFT_BRACKET)) {
             $this->string($parentId, $semantics);
@@ -303,7 +299,7 @@ class SieveParser
      * @param SieveSemantics $semantics
      * @throws SieveException
      */
-    protected function testlist(int $parentId, SieveSemantics $semantics): void
+    protected function testList(int $parentId, SieveSemantics $semantics): void
     {
         if (!$this->scanner->nextTokenIs(SieveToken::LEFT_PARENTHESIS)) {
             $this->test($parentId, $semantics);
@@ -333,7 +329,7 @@ class SieveParser
      * @param SieveSemantics $semantics
      * @throws SieveException
      */
-    protected function test($parentId, $semantics): void
+    protected function test(int $parentId, SieveSemantics $semantics): void
     {
         // Check if semantics allow an identifier
         $token = $this->scanner->nextToken();

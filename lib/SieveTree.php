@@ -16,7 +16,7 @@ class SieveTree
      *
      * @param string $name
      */
-    public function __construct($name = 'tree')
+    public function __construct(string $name = 'tree')
     {
         $this->children = [];
         $this->parents = [];
@@ -58,7 +58,7 @@ class SieveTree
         $childId = ++$this->maxId;
         $this->nodes[$childId] = $child;
         $this->parents[$childId] = $parentId;
-        array_push($this->children[$parentId], $childId);
+        $this->children[$parentId][] = $childId;
 
         return $childId;
     }
@@ -178,10 +178,10 @@ class SieveTree
         $children = $this->children[$parentId] ?? [];
 
         $dump = '';
-        for ($i = 0; $i < count($children); ++$i) {
-            $childNode = $this->nodes[$children[$i]];
+        foreach ($children as $iValue) {
+            $childNode = $this->nodes[$iValue];
             $dump .= $childNode->text();
-            $dump .= $this->childrenText($children[$i]);
+            $dump .= $this->childrenText($iValue);
         }
         return $dump;
     }

@@ -78,7 +78,7 @@ class SieveToken implements SieveDumpable
      */
     public function dump(): string
     {
-        return '<' . SieveToken::escape($this->text) . '> type:' . SieveToken::typeString(
+        return '<' . static::escape($this->text) . '> type:' . static::typeString(
             $this->type
         ) . ' line:' . $this->line;
     }
