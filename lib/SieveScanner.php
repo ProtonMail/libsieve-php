@@ -126,7 +126,7 @@ class SieveScanner
      * @param $type
      * @return bool
      */
-    public function currentTokenIs($type): bool
+    public function currentTokenIs(int $type): bool
     {
         $currentToken = $this->getCurrentToken();
         return isset($currentToken) ? $currentToken->is($type) : false;

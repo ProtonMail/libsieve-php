@@ -38,7 +38,7 @@ EOS;
         $parser = new SieveParser();
         $parser->parse($sieve);
 
-        static::assertEquals($sieve, $parser->getParseTree()->getText());
+        self::assertEquals($sieve, $parser->getParseTree()->getText());
     }
 
     /**
@@ -51,7 +51,7 @@ EOS;
         $parser = new SieveParser();
         $parser->parse($sieve);
         // it should not raise an exception
-        static::assertEquals($sieve, $parser->getScriptText());
+        self::assertEquals($sieve, $parser->getScriptText());
     }
 
     /**
@@ -180,7 +180,7 @@ DUMP;
         yield ['if header :is "To" ["a@b.c"] {}', $dumpExpected1];
         yield [
             'require ["virustest", "comparator-i;ascii-numeric"];',
-            $dumpExpected2
+            $dumpExpected2,
         ];
         yield [
             '# C
@@ -189,9 +189,7 @@ if address :is "b" text:
 t
 .
 {}',
-            $dumpExpected3
+            $dumpExpected3,
         ];
     }
 }
-
-

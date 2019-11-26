@@ -16,7 +16,7 @@ class SieveTree
      *
      * @param string $name
      */
-    public function __construct($name = 'tree')
+    public function __construct(string $name = 'tree')
     {
         $this->children = [];
         $this->parents = [];

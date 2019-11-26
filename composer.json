@@ -42,7 +42,7 @@
     "require-dev": {
         "phpunit/phpunit": "^7",
         "squizlabs/php_codesniffer": "^3.5",
-        "protonlabs/php-coding-standard": "^2.1"
+        "protonlabs/php-coding-standard": "^3.0"
     },
     "scripts": {
         "phpcs": "phpcs lib",

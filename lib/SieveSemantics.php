@@ -218,7 +218,7 @@ class SieveSemantics
      */
     protected function follows(\SimpleXMLElement $arg): string
     {
-        return (string) ( $arg['follows'] ?? '.*');
+        return (string) ($arg['follows'] ?? '.*');
     }
 
     /**
@@ -412,7 +412,7 @@ class SieveSemantics
     }
 
     /**
-     * Add dependency that is expected to be fullfilled when parsing
+     * Add dependency that is expected to be fulfilled when parsing
      * of the current command is {@see done}.
      *
      * @param string            $type
@@ -440,7 +440,7 @@ class SieveSemantics
      * @param string[]|string|null $arg
      * @throws SieveException
      */
-    protected function invoke(SieveToken $token, $func, $arg = [])
+    protected function invoke(SieveToken $token, $func, $arg = []): void
     {
         if (!is_array($arg)) {
             $arg = [$arg];
@@ -459,7 +459,7 @@ class SieveSemantics
      * @param  string $extension the extension name
      * @return string|null an error message
      */
-    protected function setRequire(string $extension)
+    protected function setRequire(string $extension): ?string
     {
         self::$requiredExtensions[] = $extension;
         try {
@@ -478,12 +478,12 @@ class SieveSemantics
      * needed later {@see done}. For address parts from a extension
      * dependency information and valid values are looked up as well.
      *
-     * @param string $addresspart
+     * @param string $addressPart
      */
-    protected function addressPartHook(string $addresspart): void
+    protected function addressPartHook(string $addressPart): void
     {
-        $this->addressPart = $addresspart;
-        $xml = $this->registry->addresspart($this->addressPart);
+        $this->addressPart = $addressPart;
+        $xml = $this->registry->addressPart($this->addressPart);
 
         if (isset($xml)) {
             // Add possible value and dependency
@@ -499,12 +499,12 @@ class SieveSemantics
      * needed later {@see done}. For a match type from extensions
      * dependency information and valid values are looked up as well.
      *
-     * @param string $matchtype
+     * @param string $matchType
      */
-    protected function matchTypeHook(string $matchtype): void
+    protected function matchTypeHook(string $matchType): void
     {
-        $this->matchType = $matchtype;
-        $xml = $this->registry->matchtype($this->matchType);
+        $this->matchType = $matchType;
+        $xml = $this->registry->matchType($this->matchType);
 
         if (isset($xml)) {
             // Add possible value and dependency

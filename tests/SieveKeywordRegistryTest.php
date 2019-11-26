@@ -76,7 +76,7 @@ EOS;
      * Checks the behavior when several extensions are required.
      *
      * @param string      $sieveExtensions
-     * @param null|string $exception
+     * @param string|null $exception
      * @throws \Sieve\SieveException
      * @dataProvider mixExtensionProvider
      */
@@ -90,7 +90,7 @@ require [$sieveExtensions];
 EOS;
 
         if (isset($exception)) {
-           static::expectException($exception);
+            static::expectException($exception);
         }
 
         $parser->parse($sieve);
@@ -106,23 +106,23 @@ EOS;
     {
         return [
             "correct" => [
-                '"relational", "mixed"'
+                '"relational", "mixed"',
             ],
             "correct inversed" => [
-                '"mixed", "relational"'
+                '"mixed", "relational"',
             ],
             "missing required" => [
                 '"mixed"',
-                \Sieve\SieveException::class
+                \Sieve\SieveException::class,
             ],
             "one forbidden extension" => [
                 '"mixed", "spamtest"',
-                \Sieve\SieveException::class
+                \Sieve\SieveException::class,
             ],
             "several forbidden extensions" => [
                 '"vacation", "mixed", "spamtest"',
-                \Sieve\SieveException::class
-            ]
+                \Sieve\SieveException::class,
+            ],
         ];
     }
 
