@@ -1,0 +1,5 @@
+require ["relational","variables"];
+
+if string :count "eq" "..." "1" {
+    set "ok" "1";
+}
