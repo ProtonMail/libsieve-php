@@ -750,7 +750,7 @@ class SieveSemantics
             }
 
             foreach ($values as $value) {
-                if (preg_match('/^' . $d['regex'] . '$/mi', $value)) {
+                if ($value !== null && preg_match('/^' . $d['regex'] . '$/mi', $value)) {
                     break 2;
                 }
             }
