@@ -1,6 +1,6 @@
 # libsieve-php
 
-[![Build Status](https://img.shields.io/travis-ci/ProtonMail/libsieve-php.svg?style=flat-square)](https://travis-ci.org/ProtonMail/libsieve-php)
+[![Build Status](https://img.shields.io/travis/ProtonMail/libsieve-php.svg?style=flat-square)](https://travis-ci.org/ProtonMail/libsieve-php)
 [![Coverage](https://img.shields.io/codecov/c/github/ProtonMail/libsieve-php.svg?style=flat-square)](https://codecov.io/gh/ProtonMail/libsieve-php)
 [![License](https://img.shields.io/github/license/ProtonMail/libsieve-php.svg?style=flat-square)](https://github.com/ProtonMail/libsieve-php/blob/master/LICENSE)
 
