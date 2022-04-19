@@ -1,0 +1,9 @@
+<?xml version='1.0' standalone='yes'?>
+
+<extension name="mailbox">
+
+	<tagged-argument extends="fileinto">
+		<parameter type="tag" name="create" regex="create" occurrence="optional" />
+	</tagged-argument>
+
+</extension>
