@@ -385,9 +385,10 @@ class SieveSemantics
     /**
      * Invoke.
      *
+     * @param string[]|string|null $arg
      * @throws SieveException
      */
-    protected function invoke(SieveToken $token, string $func, mixed $arg = []): void
+    protected function invoke(SieveToken $token, string $func, array|string|null $arg = []): void
     {
         if (!is_array($arg)) {
             $arg = [$arg];

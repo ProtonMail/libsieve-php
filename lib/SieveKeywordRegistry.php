@@ -192,7 +192,7 @@ class SieveKeywordRegistry
         return $this->matchTypes[$name] ?? null;
     }
 
-    public function addressPart(string $name)
+    public function addressPart(string $name): mixed
     {
         return $this->addressParts[$name] ?? null;
     }
@@ -200,7 +200,7 @@ class SieveKeywordRegistry
     /**
      * Get comparator.
      */
-    public function comparator(string $name)
+    public function comparator(string $name): mixed
     {
         return $this->comparators[$name] ?? null;
     }
@@ -208,7 +208,7 @@ class SieveKeywordRegistry
     /**
      * Get test.
      */
-    public function test($name)
+    public function test($name): mixed
     {
         return $this->tests[$name] ?? null;
     }
@@ -216,7 +216,7 @@ class SieveKeywordRegistry
     /**
      * Get command.
      */
-    public function command($name)
+    public function command($name): mixed
     {
         return $this->commands[$name] ?? null;
     }
@@ -248,6 +248,8 @@ class SieveKeywordRegistry
 
     /**
      * Get require strings.
+     *
+     * @return string[]
      */
     public function requireStrings(): array
     {

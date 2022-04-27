@@ -64,7 +64,8 @@ class SieveTree
 
     /**
      * Get children of a specific node.
-     * Returns the child ids or null, if parent node not found
+     *
+     * @return int[]|null the child ids or null, if parent node not found
      */
     public function getChildren(int $nodeId): ?array
     {
