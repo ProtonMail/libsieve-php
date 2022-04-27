@@ -4,14 +4,49 @@ declare(strict_types=1);
 
 namespace Sieve;
 
+use Closure;
+
 class SieveScanner
 {
+    protected ?Closure $ptFn = null;
+    protected int $tokenPos = 0;
+    protected array $tokens = [];
+    protected array $tokenMatch = [
+        SieveToken::LEFT_BRACKET       =>  '\[',
+        SieveToken::RIGHT_BRACKET      =>  '\]',
+        SieveToken::BLOCK_START        =>  '\{',
+        SieveToken::BLOCK_END          =>  '\}',
+        SieveToken::LEFT_PARENTHESIS   =>  '\(',
+        SieveToken::RIGHT_PARENTHESIS  =>  '\)',
+        SieveToken::COMMA             =>  ',',
+        SieveToken::SEMICOLON         =>  ';',
+        SieveToken::WHITESPACE        =>  '[ \r\n\t]+',
+        SieveToken::TAG               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
+        /*
+        "                           # match a quotation mark
+        (                           # start matching parts that include an escaped quotation mark
+        ([^"]*[^"\\\\])             # match a string without quotation marks and not ending with a backlash
+        ?                           # this also includes the empty string
+        (\\\\\\\\)*                 # match any groups of even number of backslashes
+                                    # (thus the character after these groups are not escaped)
+        \\\\"                       # match an escaped quotation mark
+        )*                          # accept any number of strings that end with an escaped quotation mark
+        [^"]*                       # accept any trailing part that does not contain any quotation marks
+        "                           # end of the quoted string
+        */
+        SieveToken::QUOTED_STRING      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
+        SieveToken::NUMBER            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
+        SieveToken::COMMENT           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
+        SieveToken::MULTILINE_STRING =>
+            'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
+        SieveToken::IDENTIFIER        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
+        SieveToken::UNKNOWN           =>  '[^ \r\n\t]+',
+    ];
+
     /**
      * SieveScanner constructor.
-     *
-     * @param $script
      */
-    public function __construct(&$script)
+    public function __construct(?string $script)
     {
         if ($script === null) {
             return;
@@ -22,22 +57,16 @@ class SieveScanner
 
     /**
      * Set passthrough func.
-     *
-     * @param $callback
      */
     public function setPassthroughFunc(callable $callback): void
     {
-        if ($callback === null || is_callable($callback)) {
-            $this->ptFn = $callback;
-        }
+        $this->ptFn = Closure::fromCallable($callback);
     }
 
     /**
      * Tokenizes a script.
-     *
-     * @param $script
      */
-    public function tokenize(string &$script): void
+    public function tokenize(string $script): void
     {
         $pos = 0;
         $line = 1;
@@ -101,8 +130,6 @@ class SieveScanner
 
     /**
      * Get current token.
-     *
-     * @return SieveToken|null
      */
     public function getCurrentToken(): ?SieveToken
     {
@@ -111,9 +138,6 @@ class SieveScanner
 
     /**
      * Check if next token is of given type.
-     *
-     * @param int $type
-     * @return bool
      */
     public function nextTokenIs(int $type): bool
     {
@@ -122,20 +146,16 @@ class SieveScanner
 
     /**
      * Check is current token is of type.
-     *
-     * @param $type
-     * @return bool
      */
     public function currentTokenIs(int $type): bool
     {
         $currentToken = $this->getCurrentToken();
-        return isset($currentToken) ? $currentToken->is($type) : false;
+
+        return isset($currentToken) && $currentToken->is($type);
     }
 
     /**
      * Peek next token. (not moving the position)
-     *
-     * @return SieveToken
      */
     public function peekNextToken(): SieveToken
     {
@@ -149,8 +169,6 @@ class SieveScanner
 
     /**
      * Get next token. (and moving the position)
-     *
-     * @return SieveToken
      */
     public function nextToken(): SieveToken
     {
@@ -166,39 +184,4 @@ class SieveScanner
 
         return $token;
     }
-
-    protected $ptFn = null;
-    protected $tokenPos = 0;
-    protected $tokens = [];
-    protected $tokenMatch = [
-        SieveToken::LEFT_BRACKET       =>  '\[',
-        SieveToken::RIGHT_BRACKET      =>  '\]',
-        SieveToken::BLOCK_START        =>  '\{',
-        SieveToken::BLOCK_END          =>  '\}',
-        SieveToken::LEFT_PARENTHESIS   =>  '\(',
-        SieveToken::RIGHT_PARENTHESIS  =>  '\)',
-        SieveToken::COMMA             =>  ',',
-        SieveToken::SEMICOLON         =>  ';',
-        SieveToken::WHITESPACE        =>  '[ \r\n\t]+',
-        SieveToken::TAG               =>  ':[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        /*
-        "                           # match a quotation mark
-        (                           # start matching parts that include an escaped quotation mark
-        ([^"]*[^"\\\\])             # match a string without quotation marks and not ending with a backlash
-        ?                           # this also includes the empty string
-        (\\\\\\\\)*                 # match any groups of even number of backslashes
-                                    # (thus the character after these groups are not escaped)
-        \\\\"                       # match an escaped quotation mark
-        )*                          # accept any number of strings that end with an escaped quotation mark
-        [^"]*                       # accept any trailing part that does not contain any quotation marks
-        "                           # end of the quoted string
-        */
-        SieveToken::QUOTED_STRING      =>  '"(([^"]*[^"\\\\])?(\\\\\\\\)*\\\\")*[^"]*"',
-        SieveToken::NUMBER            =>  '[[:digit:]]+(?:[KMG])?(?=\b)',
-        SieveToken::COMMENT           =>  '(?:\/\*(?:[^\*]|\*(?=[^\/]))*\*\/|#[^\r\n]*\r?(\n|$))',
-        SieveToken::MULTILINE_STRING =>
-            'text:[ \t]*(?:#[^\r\n]*)?\r?\n(\.[^\r\n]+\r?\n|[^\.][^\r\n]*\r?\n)*\.\r?(\n|$)',
-        SieveToken::IDENTIFIER        =>  '[[:alpha:]_][[:alnum:]_]*(?=\b)',
-        SieveToken::UNKNOWN           =>  '[^ \r\n\t]+',
-    ];
 }

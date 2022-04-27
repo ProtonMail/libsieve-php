@@ -6,10 +6,10 @@ namespace Sieve;
 
 class SieveTree
 {
-    protected $children;
-    protected $parents;
-    protected $nodes;
-    protected $maxId;
+    protected array $children;
+    protected array $parents;
+    protected array $nodes;
+    protected int $maxId;
 
     /**
      * SieveTree constructor.
@@ -19,8 +19,6 @@ class SieveTree
     public function __construct(string $name = 'tree')
     {
         $this->children = [];
-        $this->parents = [];
-        $this->nodes = [];
         $this->maxId = 0;
 
         $this->parents = [null];
@@ -29,9 +27,6 @@ class SieveTree
 
     /**
      * Add child to last node.
-     *
-     * @param SieveToken $child
-     * @return int
      */
     public function addChild(SieveToken $child): ?int
     {
@@ -40,14 +35,10 @@ class SieveTree
 
     /**
      * Add child to given parent.
-     *
-     * @param int        $parentId
-     * @param SieveToken $child
-     * @return int|null
      */
     public function addChildTo(int $parentId, SieveToken $child): ?int
     {
-        if (!is_int($parentId) || !isset($this->nodes[$parentId])) {
+        if (!isset($this->nodes[$parentId])) {
             return null;
         }
 
@@ -65,8 +56,6 @@ class SieveTree
 
     /**
      * Get root Id.
-     *
-     * @return int
      */
     public function getRoot(): int
     {
@@ -76,7 +65,6 @@ class SieveTree
     /**
      * Get children of a specific node.
      *
-     * @param int $nodeId
      * @return int[]|null the child ids or null, if parent node not found
      */
     public function getChildren(int $nodeId): ?array
@@ -90,9 +78,6 @@ class SieveTree
 
     /**
      * Get node from Id.
-     *
-     * @param int $nodeId
-     * @return SieveToken|null
      */
     public function getNode(int $nodeId): ?SieveToken
     {
@@ -105,9 +90,6 @@ class SieveTree
 
     /**
      * Get parent from child id.
-     *
-     * @param int $nodeId
-     * @return int|null
      */
     public function getParent(int $nodeId): ?int
     {
@@ -116,8 +98,6 @@ class SieveTree
 
     /**
      * Get last id.
-     *
-     * @return int
      */
     public function getLastId(): int
     {
@@ -126,8 +106,6 @@ class SieveTree
 
     /**
      * Dump the tree.
-     *
-     * @return string
      */
     public function dump(): string
     {
@@ -136,10 +114,6 @@ class SieveTree
 
     /**
      * Dump children of given node.
-     *
-     * @param int    $parentId
-     * @param string $prefix
-     * @return string
      */
     protected function dumpChildren(int $parentId, string $prefix): string
     {
@@ -159,8 +133,6 @@ class SieveTree
 
     /**
      * Get text.
-     *
-     * @return string
      */
     public function getText(): string
     {
@@ -169,11 +141,8 @@ class SieveTree
 
     /**
      * Get child text.
-     *
-     * @param $parentId
-     * @return string
      */
-    protected function childrenText($parentId): string
+    protected function childrenText(int $parentId): string
     {
         $children = $this->children[$parentId] ?? [];
 

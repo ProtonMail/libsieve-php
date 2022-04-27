@@ -9,7 +9,6 @@ class SieveKeywordRegistryTest extends TestCase
 {
     /**
      * Checks that the extension cannot be loaded if it forbids usage of another already loaded extension.
-     *
      */
     public function testForbiddenExtensionLoadedBefore()
     {
@@ -34,7 +33,7 @@ EOS;
      *
      * @throws \Sieve\SieveException
      */
-    public function testRequiresExtension()
+    public function testRequiresExtension(): void
     {
         $path = __DIR__ . "/customExtensions/requireRequiresExtension.xml";
         $parser = new SieveParser(null, [$path]);
@@ -59,9 +58,8 @@ EOS;
      * Checks extensions fails if required extension is not loaded before.
      *
      * @throws \Sieve\SieveException
-     * @expectedException \Sieve\SieveException
      */
-    public function testRequiresExtensionFailsIfNotLoaded()
+    public function testRequiresExtensionFailsIfNotLoaded(): void
     {
         $path = __DIR__ . "/customExtensions/requireRequiresExtension.xml";
         $parser = new SieveParser(null, [$path]);
@@ -69,18 +67,17 @@ EOS;
 require ["requires"];
 EOS;
 
+        $this->expectException(\Sieve\SieveException::class);
+
         $parser->parse($sieve);
     }
 
     /**
      * Checks the behavior when several extensions are required.
-     *
-     * @param string      $sieveExtensions
-     * @param string|null $exception
      * @throws \Sieve\SieveException
      * @dataProvider mixExtensionProvider
      */
-    public function testMixExtension(string $sieveExtensions, ?string $exception = null)
+    public function testMixExtension(string $sieveExtensions, ?string $exception = null): void
     {
         $path = __DIR__ . "/customExtensions/requireMixedExtension.xml";
         $parser = new SieveParser(null, [$path]);
@@ -99,10 +96,8 @@ EOS;
 
     /**
      * Provides various extensions requirement configuration.
-     *
-     * @return array
      */
-    public function mixExtensionProvider()
+    public function mixExtensionProvider(): array
     {
         return [
             "correct" => [
@@ -126,18 +121,16 @@ EOS;
         ];
     }
 
-    /**
-     *
-     * @expectedException \Sieve\SieveException
-     * @expectedExceptionMessage Unsupported extension type 'silly' in extension 'wrong'
-     */
-    public function testWrongExtensionType()
+    public function testWrongExtensionType(): void
     {
         $path = __DIR__ . "/customExtensions/wrongTypeExtension.xml";
         $parser = new SieveParser(null, [$path]);
         $sieve = <<<EOS
 require ["wrong"];
 EOS;
+
+        $this->expectException(\Sieve\SieveException::class);
+        $this->expectExceptionMessage('Unsupported extension type \'silly\' in extension \'wrong\'');
 
         $parser->parse($sieve);
     }

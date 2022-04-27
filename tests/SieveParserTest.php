@@ -7,7 +7,7 @@ use Sieve\SieveParser;
 
 final class SieveParserTest extends TestCase
 {
-    public function testWhiteSpacesArePreserved()
+    public function testWhiteSpacesArePreserved(): void
     {
         $sieve = <<<EOS
 require "vacation";
@@ -43,10 +43,9 @@ EOS;
 
     /**
      * @dataProvider goodProvider
-     * @param string $sieve
      * @throws \Sieve\SieveException
      */
-    public function testGood(string $sieve)
+    public function testGood(string $sieve): void
     {
         $parser = new SieveParser();
         $parser->parse($sieve);
@@ -56,17 +55,18 @@ EOS;
 
     /**
      * @dataProvider badProvider
-     * @expectedException \Sieve\SieveException
      * @param string $sieve
      * @throws \Sieve\SieveException
      */
-    public function testBad(string $sieve)
+    public function testBad(string $sieve): void
     {
         $parser = new SieveParser();
+
+        $this->expectException(\Sieve\SieveException::class);
         $parser->parse($sieve);
     }
 
-    private function provider($dirName)
+    private function provider(string $dirName)
     {
         $directoryIterator = new DirectoryIterator(__DIR__ . '/' . $dirName);
         $iterator = new RegexIterator($directoryIterator, "/.*.siv/", RegexIterator::MATCH);
@@ -91,7 +91,7 @@ EOS;
      * @param string $dumpExpected
      * @throws \Sieve\SieveException
      */
-    public function testDump(string $sieve, string $dumpExpected)
+    public function testDump(string $sieve, string $dumpExpected): void
     {
         $parser = new SieveParser();
         $parser->parse($sieve);
@@ -103,7 +103,7 @@ EOS;
         );
     }
 
-    public function dataDumpProvider()
+    public function dataDumpProvider(): iterable
     {
         $dumpExpected0 = <<<'DUMP'
 tree

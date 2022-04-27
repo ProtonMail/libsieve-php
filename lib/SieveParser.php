@@ -4,27 +4,18 @@ declare(strict_types=1);
 
 namespace Sieve;
 
+use Exception;
+
 class SieveParser
 {
-    /** @var SieveScanner the scanner */
-    protected $scanner;
-    protected $script;
-    /** @var SieveTree */
-    protected $tree;
-    protected $status;
-    protected $registry;
+    protected ?SieveScanner $scanner = null;
+    protected ?string $script = null;
+    protected ?SieveTree $tree = null;
+    protected ?SieveKeywordRegistry $registry = null;
 
-    /** @var array|null the enabled extensions */
-    private $extensionsEnabled;
-    /** @var array the custom extensions */
-    private $customExtensions;
+    private ?array $extensionsEnabled;
+    private array $customExtensions;
 
-    /**
-     * SieveParser constructor.
-     *
-     * @param array|null $extensionsEnabled
-     * @param array      $customExtensions
-     */
     public function __construct(?array $extensionsEnabled = null, array $customExtensions = [])
     {
         // just to check the errors in the constructor
@@ -36,17 +27,19 @@ class SieveParser
     /**
      * Get parsed tree.
      *
-     * @return SieveTree
+     * @throws Exception
      */
     public function getParseTree(): SieveTree
     {
+        if ($this->tree === null) {
+            throw new Exception('Tree not initialized');
+        }
+
         return $this->tree;
     }
 
     /**
      * Dump parse tree.
-     *
-     * @return string
      */
     public function dumpParseTree(): string
     {
@@ -55,8 +48,6 @@ class SieveParser
 
     /**
      * Get script text.
-     *
-     * @return string
      */
     public function getScriptText(): string
     {
@@ -65,9 +56,6 @@ class SieveParser
 
     /**
      * Get previous token.
-     *
-     * @param int $parentId
-     * @return SieveToken|null
      */
     protected function getPrevToken(int $parentId): ?SieveToken
     {
@@ -96,8 +84,6 @@ class SieveParser
 
     /**
      * PassThrough whitespace comment.
-     *
-     * @param SieveToken $token
      */
     public function passThroughWhitespaceComment(SieveToken $token): void
     {
@@ -126,8 +112,6 @@ class SieveParser
 
     /**
      * Passthrough function.
-     *
-     * @param SieveToken $token
      */
     public function passThroughFunction(SieveToken $token): void
     {
@@ -137,7 +121,6 @@ class SieveParser
     /**
      * Parse the given script.
      *
-     * @param string $script
      * @throws SieveException
      */
     public function parse(string $script): void
@@ -164,12 +147,10 @@ class SieveParser
     /**
      * Get and check command token.
      *
-     * @param int $parentId
      * @throws SieveException
      */
     protected function commands(int $parentId): void
     {
-        $token = null;
         while (true) {
             if (!$this->scanner->nextTokenIs(SieveToken::IDENTIFIER)) {
                 break;
@@ -209,8 +190,6 @@ class SieveParser
     /**
      * Process arguments.
      *
-     * @param int            $parentId
-     * @param SieveSemantics $semantics
      * @throws SieveException
      */
     protected function arguments(int $parentId, SieveSemantics $semantics): void
@@ -234,10 +213,8 @@ class SieveParser
     }
 
     /**
-     * Parses a string list..
+     * Parses a string list.
      *
-     * @param int            $parentId
-     * @param SieveSemantics $semantics
      * @throws SieveException
      */
     protected function stringList(int $parentId, SieveSemantics $semantics): void
@@ -281,8 +258,6 @@ class SieveParser
     /**
      * Processes a string.
      *
-     * @param int            $parentId
-     * @param SieveSemantics $semantics
      * @throws SieveException
      */
     protected function string(int $parentId, SieveSemantics $semantics): void
@@ -295,8 +270,6 @@ class SieveParser
     /**
      * Process a test list.
      *
-     * @param int            $parentId
-     * @param SieveSemantics $semantics
      * @throws SieveException
      */
     protected function testList(int $parentId, SieveSemantics $semantics): void
@@ -325,8 +298,6 @@ class SieveParser
     /**
      * Process a test.
      *
-     * @param int            $parentId
-     * @param SieveSemantics $semantics
      * @throws SieveException
      */
     protected function test(int $parentId, SieveSemantics $semantics): void
@@ -350,7 +321,6 @@ class SieveParser
     /**
      * Process a block.
      *
-     * @param int $parentId
      * @throws SieveException
      */
     protected function block(int $parentId): void

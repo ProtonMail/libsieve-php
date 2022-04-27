@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Sieve;
 
+use SimpleXMLElement;
+
 class SieveKeywordRegistry
 {
-    protected $registry = [];
-    protected $matchTypes = [];
-    protected $comparators = [];
-    protected $addressParts = [];
-    protected $commands = [];
-    protected $tests = [];
-    protected $arguments = [];
+    protected array $registry = [];
+    protected array $matchTypes = [];
+    protected array $comparators = [];
+    protected array $addressParts = [];
+    protected array $commands = [];
+    protected array $tests = [];
+    protected array $arguments = [];
 
     /**
      * @var array a map with the extension name as key.
      *
      * The value does not matter, to remove an extension, unset the key.
      */
-    protected $loadedExtensions = [];
+    protected array $loadedExtensions = [];
 
     /**
      * @var array a map defining which extensions are forbidden.
@@ -28,20 +30,17 @@ class SieveKeywordRegistry
      * containing all the extensions that forbids the current extension
      * usage.
      */
-    protected $forbiddenExtensions = [];
+    protected array $forbiddenExtensions = [];
 
     /**
      * @var array extensions that are required by another extension.
      *
      * The key is the require extensions. The value is an array of extensions, which require the current extension.
      */
-    protected $requiredExtensions = [];
+    protected array $requiredExtensions = [];
 
     /**
      * SieveKeywordRegistry constructor.
-     *
-     * @param array|null $extensionsEnabled
-     * @param            $customExtensions
      */
     public function __construct(?array $extensionsEnabled, array $customExtensions)
     {
@@ -70,7 +69,7 @@ class SieveKeywordRegistry
 
             $name = (string) $keyword['name'];
             if (array_key_exists($name, $type)) {
-                trigger_error("redefinition of $type $name - skipping");
+                trigger_error("redefinition of array $name - skipping");
             } else {
                 $type[$name] = $keyword->children();
             }
@@ -103,8 +102,6 @@ class SieveKeywordRegistry
 
     /**
      * Activates an extension.
-     *
-     * @param string $extension
      */
     public function activate(string $extension): void
     {
@@ -176,9 +173,6 @@ class SieveKeywordRegistry
 
     /**
      * Is test.
-     *
-     * @param string $name
-     * @return bool
      */
     public function isTest(string $name): bool
     {
@@ -187,62 +181,42 @@ class SieveKeywordRegistry
 
     /**
      * Is command.
-     *
-     * @param string $name
-     * @return bool
      */
     public function isCommand(string $name): bool
     {
         return isset($this->commands[$name]);
     }
 
-    /**
-     * @param string $name
-     * @return mixed|null
-     */
-    public function matchType($name)
+    public function matchType(string $name): mixed
     {
         return $this->matchTypes[$name] ?? null;
     }
 
-    /**
-     * @param string $name
-     * @return mixed|null
-     */
-    public function addressPart(string $name)
+    public function addressPart(string $name): mixed
     {
         return $this->addressParts[$name] ?? null;
     }
 
     /**
      * Get comparator.
-     *
-     * @param string $name
-     * @return mixed|null
      */
-    public function comparator(string $name)
+    public function comparator(string $name): mixed
     {
         return $this->comparators[$name] ?? null;
     }
 
     /**
      * Get test.
-     *
-     * @param string $name
-     * @return mixed|null
      */
-    public function test($name)
+    public function test($name): mixed
     {
         return $this->tests[$name] ?? null;
     }
 
     /**
      * Get command.
-     *
-     * @param string $name
-     * @return mixed|null
      */
-    public function command($name)
+    public function command($name): mixed
     {
         return $this->commands[$name] ?? null;
     }
@@ -250,8 +224,7 @@ class SieveKeywordRegistry
     /**
      * Get arguments.
      *
-     * @param string $command
-     * @return \SimpleXMLElement[]
+     * @return SimpleXMLElement[]
      */
     public function arguments(string $command): array
     {
@@ -267,11 +240,8 @@ class SieveKeywordRegistry
 
     /**
      * Get (single) argument.
-     *
-     * @param string $name
-     * @return mixed|null
      */
-    public function argument(string $name)
+    public function argument(string $name): mixed
     {
         return $this->arguments[$name]['rules'] ?? null;
     }
@@ -339,7 +309,6 @@ class SieveKeywordRegistry
     /**
      * Validate requires.
      *
-     * @param SieveToken $sieveToken
      * @throws SieveException if invalid
      */
     public function validateRequires(SieveToken $sieveToken): void

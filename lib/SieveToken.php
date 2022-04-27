@@ -30,11 +30,7 @@ class SieveToken implements SieveDumpable
     public const UNPARSED = 0x2200; // Comment | Whitespace
     public const TEST_LIST = 0x8020; // Identifier | LeftParenthesis
 
-    public $type;
-    public $text;
-    public $line;
-
-    protected static $tr = ["\r" => '\r', "\n" => '\n', "\t" => '\t'];
+    protected static array $tr = ["\r" => '\r', "\n" => '\n', "\t" => '\t'];
 
     protected const TYPE_STR = [
         SieveToken::IDENTIFIER => 'identifier',
@@ -57,24 +53,12 @@ class SieveToken implements SieveDumpable
         SieveToken::STRING_LIST => 'string list',
     ];
 
-    /**
-     * SieveToken constructor.
-     *
-     * @param int $type
-     * @param string $text
-     * @param int $line
-     */
-    public function __construct(int $type, string $text, int $line)
+    public function __construct(public int $type, public string $text, public int $line)
     {
-        $this->text = $text;
-        $this->type = $type;
-        $this->line = $line;
     }
 
     /**
      * Dump the current token.
-     *
-     * @return string
      */
     public function dump(): string
     {
@@ -85,8 +69,6 @@ class SieveToken implements SieveDumpable
 
     /**
      * Get the Sieve Text of the current token.
-     *
-     * @return string
      */
     public function text(): string
     {
@@ -95,9 +77,6 @@ class SieveToken implements SieveDumpable
 
     /**
      * Check if a token type is the given type.
-     *
-     * @param int $type
-     * @return bool
      */
     public function is(int $type): bool
     {
@@ -106,9 +85,6 @@ class SieveToken implements SieveDumpable
 
     /**
      * Get the string value of a Type.
-     *
-     * @param int $type
-     * @return string
      */
     public static function typeString(int $type): string
     {
@@ -117,9 +93,6 @@ class SieveToken implements SieveDumpable
 
     /**
      * Escapes a value.
-     *
-     * @param string $val
-     * @return string
      */
     public static function escape(string $val): string
     {
