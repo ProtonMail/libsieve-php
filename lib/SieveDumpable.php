@@ -6,6 +6,6 @@ namespace Sieve;
 
 interface SieveDumpable
 {
-    public function dump();
-    public function text();
+    public function dump(): string;
+    public function text(): string;
 }

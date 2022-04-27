@@ -4,32 +4,28 @@ declare(strict_types=1);
 
 namespace Sieve;
 
+use SimpleXMLElement;
+use Throwable;
+
 class SieveSemantics
 {
-    protected static $requiredExtensions = [];
+    protected static array $requiredExtensions = [];
 
-    protected $comparator;
-    protected $matchType;
-    protected $addressPart;
-    protected $tags = [];
-    protected $arguments;
-    protected $deps = [];
-    protected $followupToken;
-
-    /** @var SieveKeywordRegistry the registry */
-    protected $registry;
+    protected ?string $comparator = null;
+    protected ?string $matchType = null;
+    protected ?string $addressPart = null;
+    protected array $tags = [];
+    protected array $arguments;
+    protected array $deps = [];
+    protected int $followupToken;
 
     /**
      * SieveSemantics constructor.
      *
-     * @param SieveKeywordRegistry $registry
-     * @param SieveToken           $token
-     * @param SieveToken           $prevToken
      * @throws SieveException
      */
-    public function __construct(SieveKeywordRegistry $registry, SieveToken $token, ?SieveToken $prevToken)
+    public function __construct(protected SieveKeywordRegistry $registry, SieveToken $token, ?SieveToken $prevToken)
     {
-        $this->registry = $registry;
         $command = strtolower($token->text);
 
         // Check the registry for $command
@@ -54,17 +50,11 @@ class SieveSemantics
                 throw new SieveException($token, $command . ' may not appear after ' . $prevToken->text);
             }
         } elseif (isset($prevToken) || in_array($command, ['elsif', 'else'])) {
-            switch ($command) {
-                case 'require':
-                    $validAfter = 'require';
-                    break;
-                case 'elsif':
-                case 'else':
-                    $validAfter = '(if|elsif)';
-                    break;
-                default:
-                    $validAfter = $this->commandsRegex();
-            }
+            $validAfter = match ($command) {
+                'require' => 'require',
+                'elsif', 'else' => '(if|elsif)',
+                default => $this->commandsRegex(),
+            };
 
             if (isset($prevToken)) {
                 if (!preg_match('/^' . $validAfter . '$/i', $prevToken->text)) {
@@ -97,8 +87,6 @@ class SieveSemantics
 
     /**
      * Get the require strings regex.
-     *
-     * @return string
      */
     protected function requireStringsRegex(): string
     {
@@ -107,8 +95,6 @@ class SieveSemantics
 
     /**
      * Get the match type regex.
-     *
-     * @return string
      */
     protected function matchTypeRegex(): string
     {
@@ -117,8 +103,6 @@ class SieveSemantics
 
     /**
      * Get the address part regex.
-     *
-     * @return string
      */
     protected function addressPartRegex(): string
     {
@@ -127,8 +111,6 @@ class SieveSemantics
 
     /**
      * Get the commands regex.
-     *
-     * @return string
      */
     protected function commandsRegex(): string
     {
@@ -137,8 +119,6 @@ class SieveSemantics
 
     /**
      * Get the tests regex.
-     *
-     * @return string
      */
     protected function testsRegex(): string
     {
@@ -147,8 +127,6 @@ class SieveSemantics
 
     /**
      * Comparator regex.
-     *
-     * @return string
      */
     protected function comparatorRegex(): string
     {
@@ -157,11 +135,8 @@ class SieveSemantics
 
     /**
      * Get the occurrence.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return string
      */
-    protected function occurrence(\SimpleXMLElement $arg): string
+    protected function occurrence(SimpleXMLElement $arg): string
     {
         if (isset($arg['occurrence'])) {
             switch ((string) $arg['occurrence']) {
@@ -179,55 +154,40 @@ class SieveSemantics
 
     /**
      * Get the name from arg.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return string
      */
-    protected function name(\SimpleXMLElement $arg): string
+    protected function name(SimpleXMLElement $arg): string
     {
         return (string) ($arg['name'] ?? $arg['type']);
     }
 
     /**
      * get Regex from arg.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return string
      */
-    protected function regex(\SimpleXMLElement $arg): string
+    protected function regex(SimpleXMLElement $arg): string
     {
         return (string) ($arg['regex'] ?? '.*');
     }
 
     /**
      * Get case from arg.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return string
      */
-    protected function getCase(\SimpleXMLElement $arg): string
+    protected function getCase(SimpleXMLElement $arg): string
     {
         return (string) ($arg['case'] ?? 'adhere');
     }
 
     /**
      * Get follows from Args.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return string
      */
-    protected function follows(\SimpleXMLElement $arg): string
+    protected function follows(SimpleXMLElement $arg): string
     {
         return (string) ($arg['follows'] ?? '.*');
     }
 
     /**
      * Make value from Args.
-     *
-     * @param \SimpleXMLElement $arg
-     * @return mixed|null
      */
-    protected function makeValue(\SimpleXMLElement $arg)
+    protected function makeValue(SimpleXMLElement $arg): mixed
     {
         if (isset($arg->value)) {
             $res = $this->makeArguments($arg->value);
@@ -241,11 +201,8 @@ class SieveSemantics
     /**
      * Convert an extension (test) commands parameters from XML to
      * a PHP array the {@see Semantics} class understands.
-     *
-     * @param  \SimpleXMLElement[]|\SimpleXMLElement $parameters
-     * @return array
      */
-    protected function makeArguments($parameters): array
+    protected function makeArguments(SimpleXMLElement|array $parameters): array
     {
         $arguments = [];
 
@@ -397,9 +354,6 @@ class SieveSemantics
 
     /**
      * Add argument(s) expected / allowed to appear next.
-     *
-     * @param string $identifier
-     * @param array  $subArgs
      */
     protected function addArguments(string $identifier, array $subArgs): void
     {
@@ -414,12 +368,8 @@ class SieveSemantics
     /**
      * Add dependency that is expected to be fulfilled when parsing
      * of the current command is {@see done}.
-     *
-     * @param string            $type
-     * @param string            $name
-     * @param \SimpleXMLElement $dependencies
      */
-    protected function addDependency(string $type, string $name, \SimpleXMLElement $dependencies): void
+    protected function addDependency(string $type, string $name, SimpleXMLElement $dependencies): void
     {
         foreach ($dependencies as $d) {
             $this->deps[] = [
@@ -435,12 +385,9 @@ class SieveSemantics
     /**
      * Invoke.
      *
-     * @param SieveToken           $token
-     * @param callable             $func
-     * @param string[]|string|null $arg
      * @throws SieveException
      */
-    protected function invoke(SieveToken $token, $func, $arg = []): void
+    protected function invoke(SieveToken $token, string $func, mixed $arg = []): void
     {
         if (!is_array($arg)) {
             $arg = [$arg];
@@ -455,16 +402,13 @@ class SieveSemantics
 
     /**
      * Add a require extension.
-     *
-     * @param  string $extension the extension name
-     * @return string|null an error message
      */
     protected function setRequire(string $extension): ?string
     {
         self::$requiredExtensions[] = $extension;
         try {
             $this->registry->activate($extension);
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             return $throwable->getMessage();
         }
 
@@ -477,8 +421,6 @@ class SieveSemantics
      * The kind of address part is remembered in case it's
      * needed later {@see done}. For address parts from a extension
      * dependency information and valid values are looked up as well.
-     *
-     * @param string $addressPart
      */
     protected function addressPartHook(string $addressPart): void
     {
@@ -498,8 +440,6 @@ class SieveSemantics
      * The kind of match type is remembered in case it's
      * needed later {@see done}. For a match type from extensions
      * dependency information and valid values are looked up as well.
-     *
-     * @param string $matchType
      */
     protected function matchTypeHook(string $matchType): void
     {
@@ -519,8 +459,6 @@ class SieveSemantics
      * The comparator is remembered in case it's needed for
      * comparison later {@see done}. For a comparator from extensions
      * dependency information is looked up as well.
-     *
-     * @param string $comparator
      */
     protected function comparatorHook(string $comparator): void
     {
@@ -539,8 +477,6 @@ class SieveSemantics
      * The tag is remembered in case it's needed for
      * comparison later {@see done}. For a tags from extensions
      * dependency information is looked up as well.
-     *
-     * @param string $tag
      */
     protected function tagHook(string $tag): void
     {
@@ -556,7 +492,6 @@ class SieveSemantics
     /**
      * Validates type.
      *
-     * @param SieveToken $token
      * @throws SieveException
      */
     protected function validType(SieveToken $token): void
@@ -588,7 +523,6 @@ class SieveSemantics
     /**
      * Start string list.
      *
-     * @param SieveToken $token
      * @throws SieveException
      */
     public function startStringList(SieveToken $token): void
@@ -617,7 +551,6 @@ class SieveSemantics
     /**
      * Validates a token.
      *
-     * @param SieveToken $token
      * @throws SieveException
      */
     public function validateToken(SieveToken $token): void
@@ -678,7 +611,6 @@ class SieveSemantics
     /**
      * Called when script parsing is done.
      *
-     * @param SieveToken $token
      * @throws SieveException
      */
     public function done(SieveToken $token): void
