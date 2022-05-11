@@ -43,7 +43,7 @@ class ExtensionCheckExample
         try {
             $parser->parse($sieve);
         } catch (\Sieve\SieveException $se) {
-            throw new Exception("The provided sieve script is invalid!");
+            throw new \Exception("The provided sieve script is invalid!");
         }
 
         // we store the tree, because it contains all the information.
@@ -115,6 +115,7 @@ the method `$tree->dump()`).
 ```php
 <?php
 use Sieve\SieveParser;
+use Sieve;
 
 class UsageExample
 {
