@@ -48,5 +48,10 @@
     "scripts": {
         "phpcs": "phpcs lib",
         "unit": "phpunit --testdox --colors=always"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }
