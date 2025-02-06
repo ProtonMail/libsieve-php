@@ -53,7 +53,7 @@ class ExtensionCheckExample
     /**
      * Checks if an extension is loaded.
      *
-     * @param strin]g $extension
+     * @param string $extension
      * @return bool
      */
     public function isLoaded(string $extension)
